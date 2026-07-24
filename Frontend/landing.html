@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bleed — Know Where Your Money Goes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.383.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#090B10;
+    --bg-elev:#0D1017;
+    --card:rgba(255,255,255,0.04);
+    --card-border:rgba(255,255,255,0.08);
+    --accent-1:#FF6A3D;
+    --accent-2:#F9A826;
+    --grad: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    --text-hi:#F5F6F8;
+    --text-mid:#A7AEBB;
+    --text-low:#6B7280;
+    --success:#3DDC84;
+    --danger:#FF5D5D;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text-hi);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,.display{font-family:'Space Grotesk',sans-serif;}
+  .section{ padding:120px 24px; position:relative; max-width:1240px; margin:0 auto; }
+  @media(max-width:768px){ .section{ padding:72px 20px; } }
+
+  .glass{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius:20px;
+  }
+  .glass-hover{ transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease; }
+  .glass-hover:hover{
+    transform: translateY(-6px);
+    border-color: rgba(255,138,61,0.35);
+    box-shadow: 0 20px 60px -20px rgba(255,106,61,0.25);
+  }
+  .grad-text{
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .grad-btn{
+    background: var(--grad);
+    color:#0A0B0E;
+    font-weight:700;
+    border:none;
+    border-radius:14px;
+    padding:16px 32px;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+    box-shadow: 0 10px 30px -8px rgba(255,106,61,0.5);
+  }
+  .grad-btn:hover{ transform: translateY(-2px) scale(1.02); box-shadow: 0 16px 40px -8px rgba(255,106,61,0.65); }
+  .grad-btn .ripple{
+    position:absolute; border-radius:50%; background:rgba(255,255,255,0.5);
+    transform:scale(0); animation:ripple .6s linear; pointer-events:none;
+  }
+  @keyframes ripple{ to{ transform:scale(4); opacity:0; } }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--accent-2); background:rgba(255,138,61,0.08);
+    border:1px solid rgba(255,138,61,0.25); padding:6px 14px; border-radius:999px;
+  }
+
+  .reveal{ opacity:0; transform:translateY(28px); transition: opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  .reveal-delay-1.in{ transition-delay:.08s; }
+  .reveal-delay-2.in{ transition-delay:.16s; }
+  .reveal-delay-3.in{ transition-delay:.24s; }
+  .reveal-delay-4.in{ transition-delay:.32s; }
+  .reveal-delay-5.in{ transition-delay:.4s; }
+
+  .float{ animation: floaty 6s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0px);} 50%{ transform:translateY(-14px);} }
+
+  .glow-orb{
+    position:absolute; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0;
+    background: radial-gradient(circle, rgba(255,106,61,0.35), transparent 70%);
+  }
+
+  ::-webkit-scrollbar{ width:10px; }
+  ::-webkit-scrollbar-track{ background:var(--bg); }
+  ::-webkit-scrollbar-thumb{ background:linear-gradient(var(--accent-1),var(--accent-2)); border-radius:10px; }
+
+  #scroll-progress{
+    position:fixed; top:0; left:0; height:3px; width:0%;
+    background:var(--grad); z-index:9999; transition:width .1s linear;
+  }
+
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 40px; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    background:rgba(9,11,16,0.55); border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  @media(max-width:768px){ nav{ padding:16px 20px; } }
+  .logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; display:flex; align-items:center; gap:8px;}
+  .nav-links{ display:flex; gap:32px; }
+  .nav-links a{ color:var(--text-mid); text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+  .nav-links a:hover{ color:var(--text-hi); }
+  @media(max-width:900px){ .nav-links{ display:none; } }
+
+  .hero-wrap{ padding-top:220px; padding-bottom:80px; text-align:center; position:relative; }
+  @media(max-width:768px){ .hero-wrap{ padding-top:150px; } }
+  .hero-title{ font-size:clamp(38px,6vw,74px); font-weight:800; line-height:1.06; letter-spacing:-0.02em; margin:24px 0; }
+  .hero-sub{ color:var(--text-mid); font-size:19px; max-width:600px; margin:0 auto 36px; line-height:1.6; }
+  .hero-ctas{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .ghost-btn{
+    background:transparent; color:var(--text-hi); border:1px solid var(--card-border);
+    border-radius:14px; padding:16px 32px; font-weight:600; cursor:pointer; transition:.25s;
+  }
+  .ghost-btn:hover{ border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.03); }
+
+  footer{ border-top:1px solid rgba(255,255,255,0.06); padding:56px 40px 32px; color:var(--text-low); text-align:center; font-size:14px; }
+
+  .section-eyebrow-wrap{ text-align:center; margin-bottom:16px; }
+  .section-title{ text-align:center; font-size:clamp(28px,4vw,44px); font-weight:800; letter-spacing:-0.01em; margin:0 0 16px; }
+  .section-sub{ text-align:center; color:var(--text-mid); font-size:16px; max-width:560px; margin:0 auto 64px; line-height:1.6; }
+
+  /* Dashboard */
+  .dash-frame{ perspective:1200px; }
+  .dash-card{ transition: transform .1s ease; }
+  @media(max-width:900px){ .dash-grid{ grid-template-columns:repeat(2,1fr) !important; } .dash-grid2{ grid-template-columns:1fr !important; } }
+  @media(max-width:520px){ .dash-grid{ grid-template-columns:1fr !important; } }
+
+  /* Timeline */
+  .timeline{ position:relative; display:flex; flex-direction:column; gap:28px; max-width:640px; margin:0 auto; padding-left:20px; }
+  .timeline-line{ position:absolute; left:31px; top:10px; bottom:10px; width:2px; background:linear-gradient(var(--accent-1),var(--accent-2)); opacity:.35; }
+  .timeline-step{ position:relative; }
+  .step-card{ display:flex; align-items:flex-start; gap:18px; padding:22px 24px; }
+  .step-icon{ width:24px;height:24px; color:var(--accent-2); flex-shrink:0; background:rgba(255,138,61,0.1); padding:14px; border-radius:14px; box-sizing:content-box; }
+  .step-card h4{ margin:4px 0 6px; font-size:17px; }
+  .step-card p{ margin:0; color:var(--text-mid); font-size:14px; line-height:1.5; }
+
+  /* Categories */
+  .cat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  @media(max-width:900px){ .cat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .cat-card{ padding:24px; text-align:center; }
+  .cat-logo{ width:44px;height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; margin:0 auto 14px; color:#fff; font-family:'Space Grotesk',sans-serif; }
+  .cat-name{ margin:0 0 4px; font-weight:600; font-size:14px; }
+  .cat-price{ margin:0; color:var(--text-mid); font-size:13px; }
+
+  /* Money leakage */
+  .leak-row{ display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px; color:var(--text-hi); }
+  .leak-bar-track{ height:10px; border-radius:6px; background:rgba(255,255,255,0.06); overflow:hidden; margin-bottom:20px; }
+  .leak-bar{ height:100%; border-radius:6px; background:var(--grad); transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+
+  /* Compare */
+  .compare-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media(max-width:768px){ .compare-grid{ grid-template-columns:1fr; } }
+  .compare-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+  .compare-list li{ display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-mid); }
+  .ico-x{ width:16px;height:16px; color:var(--danger); flex-shrink:0; }
+  .ico-check{ width:16px;height:16px; color:var(--success); flex-shrink:0; }
+
+  /* AI assistant */
+  .ai-bullet{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-mid); margin-bottom:8px; }
+
+  /* Calculator */
+  .calc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:520px){ .calc-grid{ grid-template-columns:1fr; } }
+  .calc-field label{ display:block; font-size:13px; color:var(--text-mid); margin-bottom:6px; }
+  .calc-field input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--card-border); color:var(--text-hi);
+    border-radius:10px; padding:12px 14px; font-size:15px; font-family:inherit;
+  }
+  .calc-field input:focus{ outline:none; border-color:var(--accent-1); }
+  .calc-results{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:28px; text-align:center; }
+  @media(max-width:520px){ .calc-results{ grid-template-columns:1fr; } }
+  .calc-label{ margin:0 0 6px; font-size:12px; color:var(--text-mid); text-transform:uppercase; letter-spacing:.04em; }
+  .calc-value{ margin:0; font-size:22px; font-weight:800; font-family:'Space Grotesk',sans-serif; }
+
+  /* Stats */
+  .stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; text-align:center; }
+  @media(max-width:768px){ .stats-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stats-grid h3{ font-size:clamp(30px,4vw,42px); margin:0 0 8px; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .stats-grid p{ margin:0; color:var(--text-mid); font-size:14px; }
+
+  /* Testimonials */
+  .testi-track-wrap{ overflow:hidden; }
+  .testi-track{ display:flex; gap:20px; width:max-content; animation: scrollTesti 30s linear infinite; }
+  .testi-track:hover{ animation-play-state:paused; }
+  @keyframes scrollTesti{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .testi-card{ width:320px; flex-shrink:0; padding:26px; }
+  .testi-stars{ color:var(--accent-2); letter-spacing:2px; margin-bottom:12px; font-size:14px; }
+  .testi-card p{ font-size:14px; color:var(--text-mid); line-height:1.6; margin:0 0 20px; }
+  .testi-who{ display:flex; align-items:center; gap:12px; }
+  .testi-avatar{ width:38px;height:38px; border-radius:50%; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#0A0B0E; flex-shrink:0; }
+  .testi-name{ margin:0; font-size:13px; font-weight:600; }
+  .testi-job{ margin:0; font-size:12px; color:var(--text-low); }
+
+  /* Table */
+  .compare-table{ width:100%; border-collapse:collapse; min-width:480px; }
+  .compare-table th{ text-align:left; padding:16px 20px; font-size:13px; color:var(--text-mid); text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
+  .compare-table th:not(:first-child), .compare-table td:not(:first-child){ text-align:center; }
+  .compare-table td{ padding:16px 20px; border-top:1px solid rgba(255,255,255,0.06); font-size:14px; }
+  .compare-table td.yes{ color:var(--success); font-weight:700; }
+  .compare-table td.no{ color:var(--text-low); }
+
+  /* FAQ */
+  .faq-list{ display:flex; flex-direction:column; gap:12px; }
+  .faq-item{ overflow:hidden; }
+  .faq-q{
+    width:100%; display:flex; justify-content:space-between; align-items:center; background:none; border:none;
+    color:var(--text-hi); font-size:15px; font-weight:600; padding:20px 24px; cursor:pointer; font-family:inherit;
+  }
+  .faq-q i{ width:18px;height:18px; color:var(--accent-2); transition:transform .3s ease; flex-shrink:0; }
+  .faq-item.open .faq-q i{ transform:rotate(180deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height .35s ease, padding .35s ease; padding:0 24px; }
+  .faq-item.open .faq-a{ max-height:200px; padding:0 24px 20px; }
+  .faq-a p{ margin:0; color:var(--text-mid); font-size:14px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div id="scroll-progress"></div>
+
+<nav>
+  <div class="logo"><i data-lucide="droplet" style="color:#FF6A3D;width:22px;height:22px;"></i>Bleed</div>
+  <div class="nav-links">
+    <a href="#dashboard">Product</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <a href="login.html"><button class="ghost-btn" style="padding:10px 20px;font-size:14px;">Sign in</button></a>
+    <a href="signup.html"><button class="grad-btn" style="padding:10px 22px;font-size:14px;" onclick="rippleEffect(event)">Get Started</button></a>
+  </div>
+</nav>
+
+<!-- HERO (kept minimal / placeholder — do not restructure your existing hero) -->
+<header class="hero-wrap section">
+  <div class="glow-orb" style="width:600px;height:600px;top:-200px;left:50%;transform:translateX(-50%);"></div>
+  <span class="eyebrow reveal in"><i data-lucide="sparkles" style="width:14px;height:14px;"></i> AI-Powered Subscription Intelligence</span>
+  <h1 class="hero-title reveal in">Stop bleeding money on<br><span class="grad-text">forgotten subscriptions</span></h1>
+  <p class="hero-sub reveal in">Bleed tracks every subscription, predicts renewals, and shows you exactly where your money goes — before it's gone.</p>
+  <div class="hero-ctas reveal in">
+    <a href="signup.html"><button class="grad-btn" onclick="rippleEffect(event)">Get Started Free</button></a>
+    <button class="ghost-btn">Watch Demo</button>
+  </div>
+</header>
+
+<main id="main-sections">
+
+<!-- SECTION 1: Interactive Dashboard Preview -->
+<section class="section" id="dashboard">
+  <div class="glow-orb" style="width:500px;height:500px;top:100px;right:-150px;"></div>
+  <div class="dash-frame glass reveal" style="padding:28px;position:relative;z-index:1;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;" class="dash-grid">
+      <div class="glass glass-hover dash-card reveal-delay-1" style="padding:22px;grid-column:span 1;">
+        <p style="color:var(--text-mid);font-size:13px;margin:0 0 8px;">Monthly Spending</p>
+        <h3 style="margin:0;font-size:28px;" class="counter" data-target="4820" data-prefix="₹">₹0</h3>
+        <p style="color:var(--success);font-size:12px;margin:8px 0 0;">▲ 4.2% vs last month</p>
+      </div>
+      <div class="glass glass-hover dash-card reveal-delay-2" style="padding:22px;grid-column:span 1;">
+        <p style="color:var(--text-mid);font-size:13px;margin:0 0 8px;">Yearly Spending</p>
+        <h3 style="margin:0;font-size:28px;" class="counter" data-target="57840" data-prefix="₹">₹0</h3>
+        <p style="color:var(--text-low);font-size:12px;margin:8px 0 0;">Projected for 2026</p>
+      </div>
+      <div class="glass glass-hover dash-card reveal-delay-3" style="padding:22px;grid-column:span 1;display:flex;align-items:center;gap:14px;">
+        <div style="position:relative;width:64px;height:64px;flex-shrink:0;">
+          <svg viewBox="0 0 64 64" style="transform:rotate(-90deg);width:64px;height:64px;">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+            <circle id="health-ring" cx="32" cy="32" r="27" fill="none" stroke="url(#ringGrad)" stroke-width="7" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+            <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF6A3D"/><stop offset="100%" stop-color="#F9A826"/></linearGradient></defs>
+          </svg>
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">78%</span>
+        </div>
+        <div>
+          <p style="color:var(--text-mid);font-size:13px;margin:0;">Budget Health</p>
+          <p style="color:var(--success);font-size:12px;margin:4px 0 0;">On track</p>
+        </div>
+      </div>
+      <div class="glass glass-hover dash-card reveal-delay-4" style="padding:22px;grid-column:span 1;">
+        <p style="color:var(--text-mid);font-size:13px;margin:0 0 8px;">Critical Renewals</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i data-lucide="alert-triangle" style="width:14px;height:14px;color:var(--accent-2);"></i><span style="font-size:13px;">Netflix — tomorrow</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="clock" style="width:14px;height:14px;color:var(--text-mid);"></i><span style="font-size:13px;color:var(--text-mid);">Adobe CC — 4 days</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px;" class="dash-grid2">
+      <div class="glass glass-hover reveal-delay-2" style="padding:24px;">
+        <p style="color:var(--text-mid);font-size:13px;margin:0 0 16px;">Spending Trend</p>
+        <svg viewBox="0 0 400 120" style="width:100%;height:120px;">
+          <polyline id="spend-line" points="0,100 50,90 100,70 150,80 200,50 250,60 300,35 350,45 400,20" fill="none" stroke="url(#ringGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="glass glass-hover reveal-delay-3 float" style="padding:22px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <i data-lucide="sparkles" style="width:16px;height:16px;color:var(--accent-2);"></i>
+          <p style="margin:0;font-size:13px;font-weight:600;">AI Insight</p>
+        </div>
+        <p style="font-size:13px;color:var(--text-mid);line-height:1.5;margin:0;">You could save <span style="color:var(--accent-2);font-weight:700;">₹850/mo</span> by switching Spotify to a Family Plan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: How Bleed Works -->
+<section class="section" id="how-it-works">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">The Process</span></div>
+  <h2 class="section-title reveal">How Bleed Works</h2>
+  <p class="section-sub reveal">Five steps between you and total clarity on your recurring spend.</p>
+  <div class="timeline">
+    <div class="timeline-line"></div>
+    <div class="timeline-step reveal reveal-delay-1">
+      <div class="glass glass-hover step-card"><i data-lucide="user-plus" class="step-icon"></i><h4>Create Account</h4><p>Sign up in under a minute, no card required.</p></div>
+    </div>
+    <div class="timeline-step reveal reveal-delay-2">
+      <div class="glass glass-hover step-card"><i data-lucide="plus-circle" class="step-icon"></i><h4>Add Your Subscriptions</h4><p>Import or add each recurring service manually.</p></div>
+    </div>
+    <div class="timeline-step reveal reveal-delay-3">
+      <div class="glass glass-hover step-card"><i data-lucide="bar-chart-3" class="step-icon"></i><h4>Track Monthly Spending</h4><p>See real-time totals across every category.</p></div>
+    </div>
+    <div class="timeline-step reveal reveal-delay-4">
+      <div class="glass glass-hover step-card"><i data-lucide="bell-ring" class="step-icon"></i><h4>Receive Smart Renewal Alerts</h4><p>Get notified days before you're charged.</p></div>
+    </div>
+    <div class="timeline-step reveal reveal-delay-5">
+      <div class="glass glass-hover step-card"><i data-lucide="trending-up" class="step-icon"></i><h4>Save Money with AI Insights</h4><p>Get tailored suggestions to cut waste.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: Subscription Categories -->
+<section class="section">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">Coverage</span></div>
+  <h2 class="section-title reveal">Track What You Already Pay For</h2>
+  <p class="section-sub reveal">Bleed recognizes hundreds of popular subscriptions automatically.</p>
+  <div class="cat-grid">
+    <div class="glass glass-hover cat-card reveal reveal-delay-1"><div class="cat-logo" style="background:#E50914;">N</div><p class="cat-name">Netflix</p><p class="cat-price">₹649/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-2"><div class="cat-logo" style="background:#1DB954;">S</div><p class="cat-name">Spotify</p><p class="cat-price">₹119/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-3"><div class="cat-logo" style="background:#FF0000;">A</div><p class="cat-name">Adobe CC</p><p class="cat-price">₹1,675/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-4"><div class="cat-logo" style="background:#00A8E1;">P</div><p class="cat-name">Amazon Prime</p><p class="cat-price">₹299/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-5"><div class="cat-logo" style="background:#4285F4;">G</div><p class="cat-name">Google One</p><p class="cat-price">₹130/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-1"><div class="cat-logo" style="background:#10A37F;">C</div><p class="cat-name">ChatGPT</p><p class="cat-price">₹1,999/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-2"><div class="cat-logo" style="background:#0078D4;">M</div><p class="cat-name">Microsoft 365</p><p class="cat-price">₹489/mo</p></div>
+    <div class="glass glass-hover cat-card reveal reveal-delay-3"><div class="cat-logo" style="background:#FA243C;">M</div><p class="cat-name">Apple Music</p><p class="cat-price">₹99/mo</p></div>
+  </div>
+</section>
+
+<!-- SECTION 4: Money Leakage Visualization -->
+<section class="section" id="leakage">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">Visibility</span></div>
+  <h2 class="section-title reveal">Where Is Your Money Going?</h2>
+  <div class="glass reveal" style="padding:36px;max-width:720px;margin:0 auto;">
+    <div class="leak-row"><span>Entertainment</span><span>₹1,250</span></div>
+    <div class="leak-bar-track"><div class="leak-bar" data-pct="62" style="width:0%"></div></div>
+    <div class="leak-row"><span>Software</span><span>₹2,100</span></div>
+    <div class="leak-bar-track"><div class="leak-bar" data-pct="88" style="width:0%"></div></div>
+    <div class="leak-row"><span>Cloud Storage</span><span>₹400</span></div>
+    <div class="leak-bar-track"><div class="leak-bar" data-pct="30" style="width:0%"></div></div>
+    <div class="leak-row"><span>Gaming</span><span>₹650</span></div>
+    <div class="leak-bar-track"><div class="leak-bar" data-pct="45" style="width:0%"></div></div>
+    <div class="leak-row" style="margin-bottom:0;"><span>Finance</span><span>₹500</span></div>
+    <div class="leak-bar-track" style="margin-bottom:0;"><div class="leak-bar" data-pct="38" style="width:0%"></div></div>
+  </div>
+  <p class="reveal" style="text-align:center;color:var(--text-mid);max-width:600px;margin:32px auto 0;font-size:15px;line-height:1.7;">Most users underestimate how much they spend on recurring subscriptions. Bleed helps identify hidden expenses and gives you complete visibility into your monthly and yearly spending.</p>
+</section>
+
+<!-- SECTION 5: Before vs After -->
+<section class="section">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">The Difference</span></div>
+  <h2 class="section-title reveal">Before vs After Using Bleed</h2>
+  <div class="compare-grid">
+    <div class="glass reveal reveal-delay-1" style="padding:32px;border-color:rgba(255,93,93,0.2);">
+      <h4 style="margin:0 0 20px;color:var(--danger);">Without Bleed</h4>
+      <ul class="compare-list">
+        <li><i data-lucide="x" class="ico-x"></i>Missed Renewals</li>
+        <li><i data-lucide="x" class="ico-x"></i>Forgotten Trials</li>
+        <li><i data-lucide="x" class="ico-x"></i>Duplicate Subscriptions</li>
+        <li><i data-lucide="x" class="ico-x"></i>Unexpected Charges</li>
+        <li><i data-lucide="x" class="ico-x"></i>Overspending</li>
+      </ul>
+    </div>
+    <div class="glass glass-hover reveal reveal-delay-2" style="padding:32px;border-color:rgba(255,138,61,0.3);">
+      <h4 style="margin:0 0 20px;" class="grad-text">With Bleed</h4>
+      <ul class="compare-list">
+        <li><i data-lucide="check" class="ico-check"></i>Renewal Reminders</li>
+        <li><i data-lucide="check" class="ico-check"></i>Spending Dashboard</li>
+        <li><i data-lucide="check" class="ico-check"></i>AI Savings Suggestions</li>
+        <li><i data-lucide="check" class="ico-check"></i>Organized Subscriptions</li>
+        <li><i data-lucide="check" class="ico-check"></i>Better Financial Awareness</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: AI Assistant Preview -->
+<section class="section">
+  <div class="glow-orb" style="width:450px;height:450px;bottom:0;left:-150px;"></div>
+  <div class="glass reveal float" style="max-width:460px;margin:0 auto;padding:26px;position:relative;z-index:1;box-shadow:0 0 60px rgba(255,106,61,0.15);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="bot" style="width:18px;height:18px;color:#0A0B0E;"></i>
+      </div>
+      <p style="margin:0;font-weight:700;">Bleed AI</p>
+    </div>
+    <p style="font-size:15px;line-height:1.6;margin:0 0 14px;" id="ai-typed"></p>
+    <div id="ai-bullets" style="opacity:0;transition:opacity .6s ease;">
+      <div class="ai-bullet"><i data-lucide="scissors" style="width:14px;height:14px;color:var(--accent-2);"></i>Cancel Adobe Trial</div>
+      <div class="ai-bullet"><i data-lucide="users" style="width:14px;height:14px;color:var(--accent-2);"></i>Switch Spotify to Family Plan</div>
+      <div class="ai-bullet"><i data-lucide="calendar-clock" style="width:14px;height:14px;color:var(--accent-2);"></i>Netflix renews tomorrow</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: Interactive Savings Calculator -->
+<section class="section" id="calculator">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">Try It Yourself</span></div>
+  <h2 class="section-title reveal">Estimate Your Spending</h2>
+  <p class="section-sub reveal">See what your subscriptions really cost you every year.</p>
+  <div class="glass reveal" style="max-width:640px;margin:0 auto;padding:32px;">
+    <div class="calc-grid">
+      <div class="calc-field"><label>Netflix</label><input type="number" id="calc-netflix" value="649"></div>
+      <div class="calc-field"><label>Spotify</label><input type="number" id="calc-spotify" value="119"></div>
+      <div class="calc-field"><label>Prime Video</label><input type="number" id="calc-prime" value="299"></div>
+      <div class="calc-field"><label>Disney+</label><input type="number" id="calc-disney" value="899"></div>
+    </div>
+    <button class="grad-btn" style="width:100%;margin-top:24px;" onclick="calcSpending(event)">Calculate My Spending</button>
+    <div class="calc-results" id="calc-results">
+      <div><p class="calc-label">Monthly Cost</p><p class="calc-value" id="calc-monthly">₹0</p></div>
+      <div><p class="calc-label">Yearly Cost</p><p class="calc-value" id="calc-yearly">₹0</p></div>
+      <div><p class="calc-label">Potential Savings</p><p class="calc-value" style="color:var(--success);" id="calc-savings">₹0</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8: Statistics -->
+<section class="section">
+  <div class="stats-grid">
+    <div class="reveal reveal-delay-1"><h3 class="counter" data-target="2.5" data-decimals="1" data-prefix="₹" data-suffix="M+">₹0</h3><p>Money Saved</p></div>
+    <div class="reveal reveal-delay-2"><h3 class="counter" data-target="50" data-suffix="K+">0</h3><p>Subscriptions Managed</p></div>
+    <div class="reveal reveal-delay-3"><h3 class="counter" data-target="98" data-suffix="%">0</h3><p>Renewal Accuracy</p></div>
+    <div class="reveal reveal-delay-4"><h3 class="counter" data-target="15" data-suffix="K+">0</h3><p>Active Users</p></div>
+  </div>
+</section>
+
+<!-- SECTION 9: Testimonials -->
+<section class="section">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">Loved by Users</span></div>
+  <h2 class="section-title reveal">What People Are Saying</h2>
+  <div class="testi-track-wrap reveal">
+    <div class="testi-track" id="testi-track">
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"I found ₹3,200 in subscriptions I'd completely forgotten about."</p><div class="testi-who"><div class="testi-avatar">RK</div><div><p class="testi-name">Riya Kapoor</p><p class="testi-job">Product Designer</p></div></div></div>
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"The renewal alerts alone paid for the subscription in week one."</p><div class="testi-who"><div class="testi-avatar">AS</div><div><p class="testi-name">Arjun Shah</p><p class="testi-job">Founder, Loopwork</p></div></div></div>
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"Finally a dashboard that makes sense of all my recurring costs."</p><div class="testi-who"><div class="testi-avatar">PN</div><div><p class="testi-name">Priya Nair</p><p class="testi-job">Freelance Writer</p></div></div></div>
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"The AI suggestions cut my monthly software spend by a third."</p><div class="testi-who"><div class="testi-avatar">VM</div><div><p class="testi-name">Vikram Mehta</p><p class="testi-job">Engineering Lead</p></div></div></div>
+      <!-- duplicate set for seamless loop -->
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"I found ₹3,200 in subscriptions I'd completely forgotten about."</p><div class="testi-who"><div class="testi-avatar">RK</div><div><p class="testi-name">Riya Kapoor</p><p class="testi-job">Product Designer</p></div></div></div>
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"The renewal alerts alone paid for the subscription in week one."</p><div class="testi-who"><div class="testi-avatar">AS</div><div><p class="testi-name">Arjun Shah</p><p class="testi-job">Founder, Loopwork</p></div></div></div>
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"Finally a dashboard that makes sense of all my recurring costs."</p><div class="testi-who"><div class="testi-avatar">PN</div><div><p class="testi-name">Priya Nair</p><p class="testi-job">Freelance Writer</p></div></div></div>
+      <div class="glass glass-hover testi-card"><div class="testi-stars">★★★★★</div><p>"The AI suggestions cut my monthly software spend by a third."</p><div class="testi-who"><div class="testi-avatar">VM</div><div><p class="testi-name">Vikram Mehta</p><p class="testi-job">Engineering Lead</p></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10: Feature Comparison -->
+<section class="section">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">Comparison</span></div>
+  <h2 class="section-title reveal">Bleed vs Traditional Reminder Apps</h2>
+  <div class="glass reveal" style="padding:8px;overflow-x:auto;">
+    <table class="compare-table">
+      <thead><tr><th>Feature</th><th>Bleed</th><th>Reminder Apps</th></tr></thead>
+      <tbody>
+        <tr><td>Spending Dashboard</td><td class="yes">✓</td><td class="no">✕</td></tr>
+        <tr><td>AI Recommendations</td><td class="yes">✓</td><td class="no">✕</td></tr>
+        <tr><td>Renewal Tracking</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Spending Analytics</td><td class="yes">✓</td><td class="no">✕</td></tr>
+        <tr><td>Category Breakdown</td><td class="yes">✓</td><td class="no">✕</td></tr>
+        <tr><td>Budget Monitoring</td><td class="yes">✓</td><td class="no">✕</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 11: FAQ -->
+<section class="section" id="faq">
+  <div class="section-eyebrow-wrap reveal"><span class="eyebrow">Questions</span></div>
+  <h2 class="section-title reveal">Frequently Asked Questions</h2>
+  <div class="faq-list reveal" style="max-width:700px;margin:0 auto;">
+    <div class="faq-item glass">
+      <button class="faq-q" onclick="toggleFaq(this)">Is Bleed free? <i data-lucide="chevron-down"></i></button>
+      <div class="faq-a"><p>Yes — Bleed's core tracking and alerts are free. AI insights and advanced analytics are part of a paid plan.</p></div>
+    </div>
+    <div class="faq-item glass">
+      <button class="faq-q" onclick="toggleFaq(this)">How does renewal tracking work? <i data-lucide="chevron-down"></i></button>
+      <div class="faq-a"><p>Add a subscription once and Bleed calculates its next billing date, alerting you days before it renews.</p></div>
+    </div>
+    <div class="faq-item glass">
+      <button class="faq-q" onclick="toggleFaq(this)">Is my data secure? <i data-lucide="chevron-down"></i></button>
+      <div class="faq-a"><p>All data is encrypted in transit and at rest. Bleed never sells or shares your financial information.</p></div>
+    </div>
+    <div class="faq-item glass">
+      <button class="faq-q" onclick="toggleFaq(this)">Can I cancel subscriptions directly? <i data-lucide="chevron-down"></i></button>
+      <div class="faq-a"><p>Bleed guides you to the cancellation flow for each provider — we don't cancel on your behalf yet.</p></div>
+    </div>
+    <div class="faq-item glass">
+      <button class="faq-q" onclick="toggleFaq(this)">How do AI recommendations work? <i data-lucide="chevron-down"></i></button>
+      <div class="faq-a"><p>Bleed analyzes your usage patterns and plan pricing to suggest downgrades, plan switches, or cancellations.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 12: Premium CTA -->
+<section class="section" style="text-align:center;">
+  <div class="glow-orb" style="width:700px;height:700px;top:0;left:50%;transform:translateX(-50%);opacity:0.6;"></div>
+  <div class="glass reveal" style="padding:64px 40px;position:relative;z-index:1;">
+    <h2 style="font-size:clamp(28px,4.5vw,48px);font-weight:800;margin:0 0 16px;letter-spacing:-0.01em;">Stop Losing Money on<br>Forgotten Subscriptions</h2>
+    <p style="color:var(--text-mid);font-size:17px;max-width:480px;margin:0 auto 32px;">Join Bleed today and gain complete control over your recurring expenses.</p>
+    <a href="signup.html"><button class="grad-btn" style="padding:18px 44px;font-size:16px;" onclick="rippleEffect(event)">Get Started Free</button></a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="logo" style="justify-content:center;margin-bottom:16px;"><i data-lucide="droplet" style="color:#FF6A3D;width:20px;height:20px;"></i>Bleed</div>
+  <p>© 2026 Bleed. All rights reserved.</p>
+</footer>
+
+<script>
+  lucide.createIcons();
+  // Scroll progress
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    document.getElementById('scroll-progress').style.width = pct + '%';
+  });
+  // Reveal on scroll
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); } });
+  }, { threshold: 0.15 });
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.reveal:not(.in)').forEach(el => revealObserver.observe(el));
+  });
+  function rippleEffect(e){
+    const btn = e.currentTarget;
+    const circle = document.createElement('span');
+    const d = Math.max(btn.clientWidth, btn.clientHeight);
+    circle.style.width = circle.style.height = d + 'px';
+    circle.style.left = (e.clientX - btn.getBoundingClientRect().left - d/2) + 'px';
+    circle.style.top = (e.clientY - btn.getBoundingClientRect().top - d/2) + 'px';
+    circle.classList.add('ripple');
+    btn.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+  }
+
+  // Number counters
+  function animateCounter(el){
+    const target = parseFloat(el.dataset.target);
+    const decimals = parseInt(el.dataset.decimals || "0");
+    const prefix = el.dataset.prefix || "";
+    const suffix = el.dataset.suffix || "";
+    const dur = 1600;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = target * eased;
+      el.textContent = prefix + val.toLocaleString('en-IN', {maximumFractionDigits: decimals, minimumFractionDigits: decimals}) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting && !e.target.dataset.done){
+        e.target.dataset.done = "1";
+        animateCounter(e.target);
+      }
+    });
+  }, { threshold: 0.4 });
+
+  // Budget health ring
+  const ringObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        const ring = document.getElementById('health-ring');
+        if(ring){ ring.style.transition = 'stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1)'; ring.style.strokeDashoffset = (169.6 * (1 - 0.78)); }
+        ringObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  // Spending line draw
+  const lineEl = document.getElementById('spend-line');
+  if(lineEl){
+    const len = lineEl.getTotalLength ? lineEl.getTotalLength() : 500;
+    lineEl.style.strokeDasharray = len;
+    lineEl.style.strokeDashoffset = len;
+    const lineObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if(e.isIntersecting){
+          lineEl.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(.2,.8,.2,1)';
+          lineEl.style.strokeDashoffset = 0;
+          lineObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    lineObserver.observe(lineEl);
+  }
+
+  // Money leakage bars
+  const leakObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        e.target.querySelectorAll('.leak-bar').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+        leakObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  // AI typing animation
+  function typeAiText(){
+    const el = document.getElementById('ai-typed');
+    if(!el) return;
+    const text = "You could save ₹850 every month.";
+    let i = 0;
+    el.textContent = '';
+    const cursor = () => el.textContent.endsWith('|') ? el.textContent.slice(0,-1) : el.textContent;
+    function step(){
+      if(i <= text.length){
+        el.textContent = text.slice(0, i) + '|';
+        i++;
+        setTimeout(step, 40);
+      } else {
+        el.textContent = text;
+        document.getElementById('ai-bullets').style.opacity = '1';
+      }
+    }
+    step();
+  }
+  let aiTyped = false;
+  const aiObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting && !aiTyped){
+        aiTyped = true;
+        typeAiText();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  // Mouse tilt on dashboard frame
+  const dashFrame = document.querySelector('.dash-frame');
+  if(dashFrame){
+    dashFrame.addEventListener('mousemove', (e) => {
+      const rect = dashFrame.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      dashFrame.style.transform = `perspective(1200px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg)`;
+    });
+    dashFrame.addEventListener('mouseleave', () => {
+      dashFrame.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg)';
+    });
+    dashFrame.style.transition = 'transform .3s ease';
+  }
+
+  // Calculator
+  function calcSpending(e){
+    if(e) rippleEffect(e);
+    const n = parseFloat(document.getElementById('calc-netflix').value) || 0;
+    const s = parseFloat(document.getElementById('calc-spotify').value) || 0;
+    const p = parseFloat(document.getElementById('calc-prime').value) || 0;
+    const d = parseFloat(document.getElementById('calc-disney').value) || 0;
+    const monthly = n + s + p + d;
+    const yearly = monthly * 12;
+    const savings = Math.round(yearly * 0.18);
+    animateValue('calc-monthly', monthly, '₹');
+    animateValue('calc-yearly', yearly, '₹');
+    animateValue('calc-savings', savings, '₹');
+    document.getElementById('calc-results').style.opacity = '1';
+  }
+  function animateValue(id, target, prefix){
+    const el = document.getElementById(id);
+    const start = performance.now();
+    const dur = 900;
+    function tick(now){
+      const t = Math.min((now-start)/dur, 1);
+      const eased = 1 - Math.pow(1-t, 3);
+      el.textContent = prefix + Math.round(target*eased).toLocaleString('en-IN');
+      if(t<1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // FAQ accordion
+  function toggleFaq(btn){
+    const item = btn.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if(!wasOpen) item.classList.add('open');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.reveal:not(.in)').forEach(el => revealObserver.observe(el));
+    document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+    document.querySelector('.dash-frame') && ringObserver.observe(document.querySelector('.dash-frame'));
+    document.querySelector('#leakage .glass') && leakObserver.observe(document.querySelector('#leakage .glass'));
+    document.querySelector('#ai-typed') && aiObserver.observe(document.querySelector('#ai-typed').closest('.glass'));
+    lucide.createIcons();
+  });
+</script>
+</body>
+</html>

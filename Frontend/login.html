@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome Back — Cinematic Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Updated colors to perfectly match the 'Bleed' brand identity */
+    --bg-deep: #0b0c10;
+    --bg-blue-1: #0f111a;
+    --bg-blue-2: #14161f;
+    --lamp-warm: #ff7d45;
+    --lamp-warm-soft: #ffaa7d;
+    --lamp-core: #fff0e8;
+    --glass-bg: rgba(23, 26, 33, 0.45);
+    --glass-bg-strong: rgba(23, 26, 33, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --accent-1: #ff914d;
+    --accent-2: #e05319;
+    --cool-1: #242936;
+    --font-display: 'Poppins', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg-deep);
+    overflow: hidden;
+    font-family: var(--font-body);
+  }
+
+  /* ---------- STAGE ---------- */
+  .stage {
+    position: relative;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% 110%, var(--bg-blue-2) 0%, var(--bg-deep) 60%),
+      linear-gradient(180deg, #090a0f 0%, #0d0f14 60%, #0b0c10 100%);
+  }
+
+  .fade-overlay {
+    position: absolute; inset: 0;
+    background: #000;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 1.4s ease;
+    pointer-events: none;
+  }
+  .stage.faded-in .fade-overlay { opacity: 0; }
+
+  .skip-intro {
+    position: fixed; top: 22px; right: 26px; z-index: 200;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px; letter-spacing: .04em;
+    cursor: pointer;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.04);
+    opacity: 0;
+    transition: opacity .6s ease, border-color .3s ease, color .3s ease;
+  }
+  .skip-intro.show { opacity: 1; }
+  .skip-intro:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.3); }
+  .skip-intro.hide { opacity: 0; pointer-events: none; }
+
+  .stars { position: absolute; inset: 0; pointer-events: none; }
+  .star {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    animation: twinkle 4s ease-in-out infinite;
+  }
+  @keyframes twinkle { 0%, 100% { opacity: .15; } 50% { opacity: .7; } }
+
+  /* warm ambient wash once lamp is lit */
+  .warm-wash {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 55% 65% at 24% 62%, rgba(255, 125, 69, 0.14) 0%, rgba(255, 125, 69, 0.04) 35%, transparent 70%);
+    opacity: 0;
+    transition: opacity 1.8s ease;
+    pointer-events: none;
+  }
+  .stage.lamp-on .warm-wash { opacity: 1; }
+
+  .ground-light {
+    position: absolute; left: 10%; bottom: 12%; width: 34vw; height: 14vh;
+    background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 145, 77, 0.24), transparent 70%);
+    filter: blur(6px);
+    opacity: 0;
+    transition: opacity 1.6s ease 0.2s;
+    pointer-events: none;
+  }
+  .stage.lamp-on .ground-light { opacity: 1; }
+
+  /* ---------- LAMP ---------- */
+  .lamp {
+    position: absolute;
+    left: 18%;
+    bottom: 14%;
+    width: 120px; height: 340px;
+    transform-origin: bottom center;
+  }
+  .lamp-post {
+    position: absolute; left: 50%; bottom: 0;
+    width: 6px; height: 230px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #2b2520, #14110f);
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  }
+  .lamp-base {
+    position: absolute; left: 50%; bottom: 0;
+    width: 46px; height: 10px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #1f1a16, #0d0b09);
+    border-radius: 6px;
+  }
+  .lamp-switch {
+    position: absolute; left: 50%; bottom: 150px;
+    width: 9px; height: 9px; border-radius: 50%;
+    transform: translateX(-50%);
+    background: #2b231d;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .5) inset;
+    transition: background .3s ease, box-shadow .3s ease;
+  }
+  .stage.lamp-on .lamp-switch {
+    background: var(--lamp-warm-soft);
+    box-shadow: 0 0 8px 2px rgba(255, 170, 125, .8);
+  }
+  .lamp-shade {
+    position: absolute; left: 50%; bottom: 225px;
+    width: 110px; height: 70px;
+    transform: translateX(-50%);
+    clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+    background: linear-gradient(180deg, #473225, #241811);
+    border-top: 2px solid #543b2c;
+    overflow: visible;
+  }
+  .lamp-bulb {
+    position: absolute; left: 50%; top: 56%;
+    width: 14px; height: 14px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--lamp-core);
+    opacity: 0;
+    transition: opacity 1.3s ease, box-shadow 1.3s ease;
+  }
+  .stage.lamp-on .lamp-bulb {
+    opacity: 1;
+    box-shadow:
+      0 0 20px 10px rgba(255, 145, 77, .9),
+      0 0 60px 30px rgba(255, 125, 69, .55),
+      0 0 140px 70px rgba(255, 90, 40, .28);
+  }
+  .glow-bloom {
+    position: absolute; left: calc(18% + 5px); bottom: calc(14% + 210px);
+    width: 10px; height: 10px;
+    transform: translate(-50%, 0) scale(0.2);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 240, 232, 0.9) 0%, rgba(255, 145, 77, 0.35) 35%, transparent 70%);
+    opacity: 0;
+    filter: blur(2px);
+    transition: opacity 1.6s ease, transform 1.8s cubic-bezier(.2, .8, .3, 1);
+    pointer-events: none;
+  }
+  .stage.lamp-on .glow-bloom {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(60);
+  }
+
+  /* ---------- MAN ---------- */
+  .man {
+    position: absolute;
+    left: -8vw;
+    bottom: 14.6%;
+    width: 46px; height: 132px;
+    transform: translateX(0);
+    animation-fill-mode: forwards;
+    will-change: transform;
+  }
+  .stage.walking .man {
+    animation: walkAcross 3.1s cubic-bezier(.45, .05, .35, 1) forwards;
+  }
+  .stage.arrived .man {
+    transform: translateX(30.5vw);
+  }
+  @keyframes walkAcross {
+    from { transform: translateX(0); }
+    to { transform: translateX(30.5vw); }
+  }
+  .man-head {
+    position: absolute; top: 0; left: 50%;
+    width: 20px; height: 20px; border-radius: 50%;
+    transform: translateX(-50%);
+    background: #12100e;
+  }
+  .man-torso {
+    position: absolute; top: 18px; left: 50%;
+    width: 24px; height: 52px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #141210, #0a0908);
+    border-radius: 8px 8px 6px 6px;
+    transition: transform .4s ease;
+  }
+  .stage.reaching .man-torso { transform: translateX(-50%) rotate(-4deg); }
+
+  .arm {
+    position: absolute; top: 22px;
+    width: 7px; height: 44px;
+    border-radius: 4px;
+    background: #100e0d;
+    transform-origin: top center;
+  }
+  .arm-left { left: 12px; }
+  .arm-right { right: 12px; }
+  .stage.walking .arm-left { animation: swingArmL 0.62s ease-in-out infinite; }
+  .stage.walking .arm-right { animation: swingArmR 0.62s ease-in-out infinite; }
+  @keyframes swingArmL { 0%, 100% { transform: rotate(28deg); } 50% { transform: rotate(-28deg); } }
+  @keyframes swingArmR { 0%, 100% { transform: rotate(-28deg); } 50% { transform: rotate(28deg); } }
+
+  .stage.reaching #armRight {
+    animation: none !important;
+    transform: rotate(-118deg) translateY(2px);
+    transition: transform .55s cubic-bezier(.3, .6, .3, 1);
+  }
+
+  .leg {
+    position: absolute; bottom: 0;
+    width: 8px; height: 56px;
+    border-radius: 4px;
+    background: #0a0908;
+    transform-origin: top center;
+  }
+  .leg-left { left: 11px; }
+  .leg-right { right: 11px; }
+  .stage.walking .leg-left { animation: swingLegL 0.62s ease-in-out infinite; }
+  .stage.walking .leg-right { animation: swingLegR 0.62s ease-in-out infinite; }
+  @keyframes swingLegL { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(24deg); } }
+  @keyframes swingLegR { 0%, 100% { transform: rotate(24deg); } 50% { transform: rotate(-24deg); } }
+
+  .stage.walking .man { animation-name: walkAcross, bob; }
+  @keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -3px; } }
+
+  /* ---------- PARTICLES ---------- */
+  .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .particle {
+    position: absolute;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: rgba(255, 145, 77, 0.8);
+    box-shadow: 0 0 6px 2px rgba(255, 125, 69, 0.5);
+    opacity: 0;
+    transition: opacity 1.4s ease;
+  }
+  .particles.on .particle { opacity: var(--p-op, .6); }
+
+  /* ---------- LOGIN PANEL ---------- */
+  .login-wrap {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transform: translateY(34px);
+    transition: opacity 1.2s cubic-bezier(.16, 1, .3, 1), transform 1.2s cubic-bezier(.16, 1, .3, 1);
+    z-index: 10;
+  }
+  .login-wrap.in { opacity: 1; transform: translateY(0); }
+
+  .login-panel {
+    position: relative;
+    width: min(410px, 100%);
+    padding: 44px 38px 36px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.65),
+      0 0 80px rgba(255, 145, 77, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: box-shadow .4s ease, border-color .4s ease;
+  }
+  .login-panel:hover {
+    border-color: rgba(255, 145, 77, 0.2);
+    box-shadow:
+      0 24px 70px rgba(0, 0, 0, 0.75),
+      0 0 110px rgba(255, 145, 77, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .panel-glow {
+    position: absolute; inset: -1px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(255, 145, 77, 0.08), transparent 40%, transparent 60%, rgba(255, 255, 255, 0.02));
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  .title {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(24px, 4vw, 29px);
+    color: var(--text-primary);
+    letter-spacing: .01em;
+  }
+  .subtitle {
+    margin: 0 0 30px;
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .field {
+    margin-bottom: 18px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .7s ease, transform .7s cubic-bezier(.16, 1, .3, 1);
+    transition-delay: calc(var(--d) * 0.09s);
+  }
+  .login-panel.revealed .field,
+  .login-panel.revealed .divider,
+  .login-panel.revealed .social-row,
+  .login-panel.revealed .create-account {
+    opacity: 1; transform: translateY(0);
+  }
+  .divider, .social-row, .create-account {
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .7s ease, transform .7s cubic-bezier(.16, 1, .3, 1);
+    transition-delay: calc(var(--d) * 0.09s);
+  }
+
+  label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-bottom: 7px;
+    letter-spacing: .02em;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex; align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: border-color .3s ease, box-shadow .3s ease, background .3s ease;
+  }
+  .input-wrap svg {
+    flex: 0 0 auto;
+    margin-left: 14px;
+    color: rgba(255, 255, 255, 0.35);
+    transition: color .3s ease;
+  }
+  .input-wrap:focus-within {
+    border-color: rgba(255, 145, 77, 0.45);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 0 0 3px rgba(255, 145, 77, 0.08), 0 0 24px rgba(255, 145, 77, 0.08);
+  }
+  .input-wrap:focus-within svg { color: var(--accent-1); }
+
+  .input-wrap input {
+    flex: 1;
+    background: transparent;
+    border: none; outline: none;
+    padding: 13px 12px;
+    font-size: 14.5px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+  }
+  .input-wrap input::placeholder { color: rgba(255, 255, 255, 0.2); }
+
+  .toggle-pass {
+    background: none; border: none; cursor: pointer;
+    padding: 8px 12px;
+    color: rgba(255, 255, 255, 0.35);
+    display: flex; align-items: center;
+    transition: color .3s ease;
+  }
+  .toggle-pass:hover { color: var(--accent-1); }
+
+  .field.row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .checkbox {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    margin: 0;
+  }
+  .checkbox input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .checkbox .box {
+    width: 16px; height: 16px; border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.02);
+    position: relative; flex: 0 0 auto;
+    transition: background .25s ease, border-color .25s ease;
+  }
+  .checkbox .box::after {
+    content: '';
+    position: absolute; left: 4.5px; top: 1.5px;
+    width: 4px; height: 8px;
+    border: solid #0b0c10;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform .2s ease;
+  }
+  .checkbox input:checked + .box {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border-color: transparent;
+  }
+  .checkbox input:checked + .box::after { transform: rotate(45deg) scale(1); }
+  .checkbox input:focus-visible + .box { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+
+  .forgot {
+    font-size: 13px; color: var(--text-secondary);
+    text-decoration: none;
+    transition: color .25s ease;
+  }
+  .forgot:hover { color: var(--accent-1); }
+
+  .login-btn {
+    width: 100%;
+    padding: 14px;
+    border: none; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: #ffffff;
+    font-family: var(--font-body);
+    font-weight: 600; font-size: 15px;
+    cursor: pointer;
+    transform: scale(0.85);
+    opacity: 0;
+    box-shadow: 0 8px 24px rgba(255, 114, 46, 0.2);
+    transition: opacity .7s ease calc(var(--d) * 0.09s),
+               transform .7s cubic-bezier(.34, 1.56, .64, 1) calc(var(--d) * 0.09s),
+               box-shadow .3s ease, filter .3s ease;
+  }
+  .login-panel.revealed .login-btn { opacity: 1; transform: scale(1); }
+  .login-btn:hover { filter: brightness(1.08); box-shadow: 0 10px 32px rgba(255, 114, 46, 0.35); }
+  .login-btn:active { filter: brightness(0.95); }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 22px 0 18px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .social-row { display: flex; gap: 12px; margin-bottom: 22px; }
+  .social-btn {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background .3s ease, border-color .3s ease, transform .2s ease;
+  }
+  .social-btn:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+  .create-account {
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .create-account a { color: var(--accent-1); text-decoration: none; font-weight: 500; }
+  .create-account a:hover { text-decoration: underline; }
+
+  a:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent-1);
+    outline-offset: 2px;
+  }
+
+  @media (max-width:640px) {
+    .lamp { left: 8%; transform: scale(0.8); }
+    .man { left: -14vw; }
+    @keyframes walkAcross { from { transform: translateX(0); } to { transform: translateX(22vw); } }
+    .stage.arrived .man { transform: translateX(22vw); }
+    .login-panel { padding: 34px 24px 28px; border-radius: 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-overlay, .login-wrap, .field, .divider, .social-row, .create-account, .login-btn, .lamp-bulb, .glow-bloom, .ground-light, .warm-wash {
+      transition: none !important;
+    }
+    .man, .arm, .leg { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="skip-intro" id="skipIntro">Skip intro</div>
+
+<div class="stage" id="stage">
+  <div class="fade-overlay"></div>
+  <div class="warm-wash"></div>
+  <div class="stars" id="stars"></div>
+
+  <div class="ground-light"></div>
+
+  <div class="lamp">
+    <div class="lamp-base"></div>
+    <div class="lamp-post"></div>
+    <div class="lamp-switch"></div>
+    <div class="lamp-shade">
+      <div class="lamp-bulb"></div>
+    </div>
+  </div>
+  <div class="glow-bloom"></div>
+
+  <div class="man" id="man">
+    <div class="man-head"></div>
+    <div class="man-torso"></div>
+    <div class="arm arm-left" id="armLeft"></div>
+    <div class="arm arm-right" id="armRight"></div>
+    <div class="leg leg-left"></div>
+    <div class="leg leg-right"></div>
+  </div>
+
+  <div class="particles" id="particles"></div>
+
+  <div class="login-wrap" id="loginWrap">
+    <div class="login-panel" id="loginPanel">
+      <div class="panel-glow"></div>
+      <h1 class="title">Welcome Back</h1>
+      <p class="subtitle">Sign in to continue</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field" style="--d:1">
+          <label for="email">Email</label>
+          <div class="input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M4 6l8 7 8-7"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+            <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="field" style="--d:2">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pass" id="togglePass" aria-label="Show password">
+              <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="field row" style="--d:3">
+          <label class="checkbox">
+            <input type="checkbox" id="remember">
+            <span class="box"></span>
+            Remember me
+          </label>
+          <a href="#" class="forgot">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="login-btn" style="--d:4">Sign In</button>
+
+        <div class="divider" style="--d:5"><span>or continue with</span></div>
+
+        <div class="social-row" style="--d:6">
+          <button type="button" class="social-btn" aria-label="Continue with Google">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.3-1.7 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.15.8 3.9 1.5l2.65-2.55C16.9 3.3 14.7 2.3 12 2.3 6.9 2.3 2.75 6.45 2.75 11.55S6.9 20.8 12 20.8c6.9 0 9.6-4.85 9.6-7.35 0-.5-.05-.85-.12-1.25H12z"/></svg>
+          </button>
+          <button type="button" class="social-btn" aria-label="Continue with Apple">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 1.5c.1 1.2-.35 2.35-1 3.2-.7.85-1.85 1.5-2.95 1.4-.15-1.15.4-2.35 1.05-3.1.7-.85 1.95-1.45 2.9-1.5zM20.6 17.2c-.4.95-.85 1.8-1.45 2.6-.8 1.1-1.75 2.45-3.05 2.45-1.15 0-1.5-.75-2.95-.75s-1.85.75-2.95.75c-1.25 0-2.25-1.25-3.05-2.35-1.7-2.35-3-6.65-1.25-9.55.85-1.4 2.4-2.3 4.05-2.3 1.2 0 2.35.8 3.05.8.7 0 2.1-1 3.55-.85.6.05 2.3.25 3.4 1.9-.1.05-2.05 1.2-2.05 3.55.05 2.8 2.45 3.75 2.5 3.75z"/></svg>
+          </button>
+          <button type="button" class="social-btn" aria-label="Continue with GitHub">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.15-1.11-1.46-1.11-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.36 1.08 2.93.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.1.39-2 1.03-2.7-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.4 9.4 0 015 0c1.9-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.7 0 3.84-2.35 4.68-4.58 4.93.36.31.68.92.68 1.85V21c0 .27.18.58.69.48A10 10 0 0012 2z"/></svg>
+          </button>
+        </div>
+
+        <p class="create-account" style="--d:7">Don't have an account? <a href="#">Create Account</a></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const stage = document.getElementById('stage');
+  const loginWrap = document.getElementById('loginWrap');
+  const loginPanel = document.getElementById('loginPanel');
+  const particlesEl = document.getElementById('particles');
+  const starsEl = document.getElementById('stars');
+  const skipBtn = document.getElementById('skipIntro');
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // stars
+  for(let i=0;i<50;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*55+'%';
+    s.style.animationDelay = (Math.random()*4)+'s';
+    starsEl.appendChild(s);
+  }
+
+  // particles
+  const particleEls = [];
+  for(let i=0;i<22;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const x = 8 + Math.random()*36;
+    const y = 35 + Math.random()*45;
+    const dur = 6 + Math.random()*6;
+    const delay = Math.random()*4;
+    p.style.left = x+'%';
+    p.style.top = y+'%';
+    p.style.setProperty('--p-op', (0.3+Math.random()*0.5).toFixed(2));
+    p.style.animation = `floaty ${dur}s ease-in-out ${delay}s infinite`;
+    particlesEl.appendChild(p);
+    particleEls.push(p);
+  }
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `@keyframes floaty{0%,100%{transform:translateY(0) translateX(0);}50%{transform:translateY(-22px) translateX(6px);}}`;
+  document.head.appendChild(styleSheet);
+
+  let timers = [];
+  function schedule(fn, t){ timers.push(setTimeout(fn, t)); }
+  function clearAll(){ timers.forEach(clearTimeout); timers = []; }
+
+  function runSequence(){
+    schedule(()=> stage.classList.add('faded-in'), 150);
+    schedule(()=> skipBtn.classList.add('show'), 500);
+    schedule(()=> stage.classList.add('walking'), 500);
+    schedule(()=>{
+      stage.classList.remove('walking');
+      stage.classList.add('arrived');
+    }, 3650);
+    schedule(()=> stage.classList.add('reaching'), 3800);
+    schedule(()=> stage.classList.add('lamp-on'), 4350);
+    schedule(()=> particlesEl.classList.add('on'), 4600);
+    schedule(()=> loginWrap.classList.add('in'), 4900);
+    schedule(()=> loginPanel.classList.add('revealed'), 5700);
+    schedule(()=> skipBtn.classList.add('hide'), 6600);
+    schedule(startFloatLoop, 6800);
+  }
+
+  function skipToEnd(){
+    clearAll();
+    stage.classList.add('faded-in','arrived','reaching','lamp-on');
+    stage.classList.remove('walking');
+    particlesEl.classList.add('on');
+    loginWrap.classList.add('in');
+    loginPanel.classList.add('revealed');
+    skipBtn.classList.add('hide');
+    startFloatLoop();
+  }
+
+  skipBtn.addEventListener('click', skipToEnd);
+
+  if(reduced){
+    skipToEnd();
+  } else {
+    runSequence();
+  }
+
+  // continuous subtle float + mouse parallax on the panel
+  let floatStarted = false;
+  let t0 = null;
+  let mx = 0, my = 0, curX = 0, curY = 0;
+
+  function startFloatLoop(){
+    if(floatStarted) return;
+    floatStarted = true;
+    document.addEventListener('mousemove', (e)=>{
+      const r = window.innerWidth, h = window.innerHeight;
+      mx = (e.clientX/r - 0.5) * 2;
+      my = (e.clientY/h - 0.5) * 2;
+    });
+    requestAnimationFrame(loop);
+  }
+
+  function loop(ts){
+    if(t0===null) t0 = ts;
+    const elapsed = (ts - t0)/1000;
+    const floatY = Math.sin(elapsed * 0.6) * 6;
+    curX += (mx - curX) * 0.05;
+    curY += (my - curY) * 0.05;
+    const tiltX = curX * 4;
+    const tiltY = -curY * 4;
+    loginPanel.style.transform = `translateY(${floatY}px) rotateX(${tiltY}deg) rotateY(${tiltX}deg)`;
+    requestAnimationFrame(loop);
+  }
+
+  // password show/hide toggle
+  const pwInput = document.getElementById('password');
+  const toggleBtn = document.getElementById('togglePass');
+  toggleBtn.addEventListener('click', ()=>{
+    const isHidden = pwInput.type === 'password';
+    pwInput.type = isHidden ? 'text' : 'password';
+    toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+  });
+
+  // form submit (front-end only demo)
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('.login-btn');
+  const original = btn.textContent;
+  btn.textContent = 'Signing in…';
+  btn.style.pointerEvents = 'none';
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  try {
+    const res = await fetch('http://localhost:4000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || 'Invalid email or password.');
+      btn.textContent = original;
+      btn.style.pointerEvents = 'auto';
+      return;
+    }
+
+    localStorage.setItem('bleed_token', data.token);
+    localStorage.setItem('bleed_user', JSON.stringify(data.user));
+    window.location.href = 'index.html';
+
+  } catch (err) {
+    alert('Could not reach the server. Is it running?');
+    btn.textContent = original;
+    btn.style.pointerEvents = 'auto';
+  }
+});
+})();
+</script>
+
+</body>
+</html>

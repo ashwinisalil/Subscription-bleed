@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bleed — Stop paying for what you forgot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="theme.js"></script>
+<style>
+  /* ---------- AMBIENT BACKGROUND ---------- */
+  main{ position:relative; }
+  .ambient{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .blob{ position:absolute; border-radius:50%; filter:blur(90px); opacity:0.35; will-change:transform; }
+  .blob-1{ width:520px; height:520px; background:radial-gradient(circle, rgba(165,24,63,0.55), transparent 70%); top:-180px; left:-120px; animation:drift1 16s ease-in-out infinite alternate; }
+  .blob-2{ width:420px; height:420px; background:radial-gradient(circle, rgba(198,72,91,0.4), transparent 70%); top:60px; right:-140px; animation:drift2 20s ease-in-out infinite alternate; }
+  @keyframes drift1{ from{ transform:translate3d(0,0,0) scale(1); } to{ transform:translate3d(40px,60px,0) scale(1.12); } }
+  @keyframes drift2{ from{ transform:translate3d(0,0,0) scale(1); } to{ transform:translate3d(-50px,40px,0) scale(0.92); } }
+
+  .glow-spot{
+    position:fixed; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, rgba(165,24,63,0.16), transparent 70%);
+    pointer-events:none; z-index:1; transform:translate3d(-50%,-50%,0);
+    opacity:0; transition:opacity .4s ease; will-change:transform;
+  }
+  @media (pointer:fine){ .glow-spot.active{ opacity:1; } }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding:96px 0 80px; display:grid; grid-template-columns:1.1fr 0.9fr; gap:64px; align-items:center; position:relative; z-index:2; }
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(26px); } to{ opacity:1; transform:translateY(0); } }
+  .hero-copy > *{ opacity:0; animation:riseIn .9s cubic-bezier(.16,1,.3,1) forwards; }
+  .hero-copy > .eyebrow{ animation-delay:.05s; }
+  .hero-copy > h1{ animation-delay:.16s; }
+  .hero-copy > .lede{ animation-delay:.30s; }
+  .hero-copy > .hero-ctas{ animation-delay:.42s; }
+  .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--rose); display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+  .eyebrow::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--wine-bright); box-shadow:0 0 0 4px rgba(165,24,63,0.18); }
+  h1{ font-size:clamp(44px, 5.4vw, 74px); line-height:0.98; margin-bottom:26px; }
+  h1 em{ font-style:italic; color:var(--wine-bright); }
+  .hero p.lede{ font-size:18px; color:var(--slate); max-width:460px; margin-bottom:36px; }
+  .hero-ctas{ display:flex; gap:14px; flex-wrap:wrap; }
+
+  .meter-frame{ opacity:0; transform:translateY(26px); transform-style:preserve-3d; will-change:transform; background:var(--ink-2); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 30px 60px -25px rgba(0,0,0,0.6); }
+  .meter-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--line); }
+  .meter-head span{ font-size:12.5px; color:var(--slate); letter-spacing:0.04em; }
+  .drip-wrap{ position:relative; width:14px; height:20px; }
+  .drip{ position:absolute; left:5px; top:0; width:4px; height:8px; background:var(--wine-bright); border-radius:0 0 50% 50%; animation:drip-fall 2.6s ease-in infinite; }
+  @keyframes drip-fall{ 0%{ top:-4px; opacity:0; } 8%{ opacity:1; } 70%{ top:16px; opacity:1; } 85%{ opacity:0; } 100%{ opacity:0; top:16px; } }
+  .meter-body{ padding:8px 0; min-height:210px; }
+  .meter-row{ display:flex; justify-content:space-between; align-items:center; padding:13px 22px; border-bottom:1px dashed var(--line); font-size:14.5px; opacity:0; transform:translateY(6px); animation:row-in .5s ease forwards; }
+  .meter-row .amt{ font-family:'IBM Plex Mono', monospace; color:var(--rose); font-size:14px; }
+  @keyframes row-in{ to{ opacity:1; transform:translateY(0); } }
+  .meter-total{ padding:20px 22px; display:flex; justify-content:space-between; align-items:baseline; background:linear-gradient(180deg, transparent, rgba(122,18,48,0.12)); }
+  .meter-total .label{ font-size:13px; color:var(--slate); letter-spacing:0.04em; }
+  .meter-total .value{ font-family:'IBM Plex Mono', monospace; font-size:26px; font-weight:500; }
+  .meter-total .value .cents{ color:var(--slate); font-size:16px; }
+  .meter-foot{ padding:12px 22px 18px; font-size:12px; color:var(--slate); }
+
+  .stats-strip{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:40px 0; position:relative; z-index:2; }
+  .stats-strip .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:28px; }
+  .stat b{ display:block; font-size:34px; }
+  .stat span{ font-size:13.5px; color:var(--slate); }
+
+  section{ padding:100px 0; }
+  .section-head{ max-width:560px; margin-bottom:56px; }
+  h2{ font-size:clamp(32px, 3.6vw, 44px); margin-bottom:14px; }
+  .section-head p{ color:var(--slate); font-size:16px; }
+
+  .steps{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden; perspective:1200px; }
+  .step{ background:var(--ink); padding:34px 30px 38px; transform-style:preserve-3d; will-change:transform; transition:transform .35s cubic-bezier(.16,1,.3,1), background .25s ease; }
+  .step .num{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--wine-bright); margin-bottom:26px; display:block; }
+  .step h3{ font-size:21px; margin-bottom:12px; }
+  .step p{ color:var(--slate); font-size:14.5px; }
+
+  .features-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden; perspective:1200px; }
+  .feature{ background:var(--ink); padding:34px; transform-style:preserve-3d; will-change:transform; transition:transform .35s cubic-bezier(.16,1,.3,1), background .25s ease; }
+  .feature:hover{ background:var(--ink-2); }
+  .feature-icon{ width:38px; height:38px; border-radius:8px; background:rgba(122,18,48,0.18); display:flex; align-items:center; justify-content:center; margin-bottom:20px; color:var(--rose); }
+  .feature h3{ font-size:17.5px; font-family:'IBM Plex Sans',sans-serif; font-weight:600; margin-bottom:8px; }
+  .feature p{ color:var(--slate); font-size:14.5px; }
+
+  .pricing-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .price-card{ border:1px solid var(--line-strong); border-radius:14px; padding:38px; }
+  .price-card.pro{ border-color:var(--wine-bright); background:linear-gradient(160deg, rgba(122,18,48,0.10), transparent 60%); position:relative; }
+  .price-card.pro::before{ content:'Most bang for your buck'; position:absolute; top:-13px; right:32px; background:var(--wine-bright); color:var(--btn-text); font-size:11.5px; padding:5px 12px; border-radius:20px; font-family:'IBM Plex Sans', sans-serif; }
+  .price-name{ font-size:15px; color:var(--slate); margin-bottom:10px; }
+  .price-amt{ font-size:44px; margin-bottom:6px; }
+  .price-amt span{ font-size:15px; color:var(--slate); font-family:'IBM Plex Sans',sans-serif; }
+  .price-desc{ color:var(--slate); font-size:14px; margin-bottom:28px; }
+  .price-list{ list-style:none; margin-bottom:30px; }
+  .price-list li{ font-size:14.5px; padding:9px 0; border-top:1px solid var(--line); display:flex; gap:10px; align-items:flex-start; }
+  .price-list li:first-child{ border-top:none; }
+  .price-list li::before{ content:'—'; color:var(--rose); flex-shrink:0; }
+  .price-btn{ display:block; text-align:center; padding:13px; border-radius:7px; border:1px solid var(--line-strong); font-size:14.5px; }
+  .price-card.pro .price-btn{ background:var(--wine-bright); border-color:var(--wine-bright); color:var(--btn-text); }
+  .price-card.pro .price-btn:hover{ background:#BE1D46; }
+  .price-card:not(.pro) .price-btn:hover{ border-color:var(--slate); }
+
+  .cta-band{ text-align:center; border-top:1px solid var(--line); }
+  .cta-band h2{ margin-bottom:22px; }
+  .cta-band .hero-ctas{ justify-content:center; }
+
+  /* ---------- ABOUT STRIP ---------- */
+  .about-strip{ border-top:1px solid var(--line); }
+  .about-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:64px; align-items:center; }
+  .about-grid h2{ margin-bottom:18px; }
+  .about-grid p{ color:var(--slate); font-size:15.5px; margin-bottom:16px; }
+  .about-stats{ display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .about-stat{ background:var(--ink-2); padding:28px 26px; }
+  .about-stat b{ display:block; font-size:28px; margin-bottom:6px; }
+  .about-stat span{ font-size:13px; color:var(--slate); }
+
+  /* ---------- TESTIMONIALS ---------- */
+  .testimonial-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; }
+  .testimonial{
+    background:var(--ink-2); border:1px solid var(--line); border-radius:14px; padding:30px;
+    display:flex; flex-direction:column; gap:20px;
+    transform-style:preserve-3d; will-change:transform;
+    transition:transform .35s cubic-bezier(.16,1,.3,1), border-color .25s ease;
+  }
+  .testimonial:hover{ border-color:var(--line-strong); }
+  .stars-row{ color:var(--amber); font-size:14px; letter-spacing:2px; }
+  .testimonial p.quote{ font-size:14.5px; color:var(--paper); line-height:1.6; flex:1; }
+  .testimonial-who{ display:flex; align-items:center; gap:12px; }
+  .t-avatar{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:600; font-size:14px; color:var(--btn-text);
+  }
+  .t-who-name{ font-size:13.5px; }
+  .t-who-role{ font-size:12px; color:var(--slate); }
+
+  /* ---------- FAQ ---------- */
+  .faq-list{ max-width:760px; }
+  .faq-item{ border-bottom:1px solid var(--line); }
+  .faq-item:first-child{ border-top:1px solid var(--line); }
+  .faq-q{
+    width:100%; text-align:left; background:none; border:none; cursor:pointer;
+    display:flex; justify-content:space-between; align-items:center; gap:20px;
+    padding:22px 4px; font-size:16px; color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .faq-q .plus{ font-family:'IBM Plex Mono', monospace; color:var(--rose); font-size:18px; flex-shrink:0; transition:transform .3s ease; }
+  .faq-item.open .faq-q .plus{ transform:rotate(45deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(.16,1,.3,1); }
+  .faq-a p{ padding:0 4px 22px; color:var(--slate); font-size:14.5px; max-width:620px; }
+
+  @media (max-width: 860px){
+    .hero{ grid-template-columns:1fr; padding-top:56px; }
+    .steps{ grid-template-columns:1fr; }
+    .features-grid{ grid-template-columns:1fr; }
+    .pricing-grid{ grid-template-columns:1fr; }
+    .stats-strip .wrap{ justify-content:flex-start; gap:40px; }
+    .about-grid{ grid-template-columns:1fr; gap:36px; }
+    .testimonial-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-spot" id="glowSpot"></div>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">Bleed<span class="dot">.</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="login.html" class="nav-cta">Log in</a>
+      <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle theme">🌙</button>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+  </div>
+</nav>
+
+<main id="top">
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Subscription control, not subscription anxiety</span>
+      <h1>Stop the <em>bleed.</em></h1>
+      <p class="lede">Netflix. Spotify. That app you tried once in March. Bleed reads your inbox, finds every subscription quietly draining your account, and hands you the ledger — before the next renewal hits.</p>
+      <div class="hero-ctas">
+        <a href="signup.html" class="btn-primary" id="magBtn1">Get started free</a>
+        <a href="#how" class="btn-secondary" id="magBtn2">See how it works</a>
+      </div>
+    </div>
+
+    <div class="meter-frame" id="meterFrame">
+      <div class="meter-head">
+        <span>LIVE LEDGER — THIS MONTH</span>
+        <div class="drip-wrap"><div class="drip"></div></div>
+      </div>
+      <div class="meter-body" id="meterBody"></div>
+      <div class="meter-total">
+        <span class="label">Total draining monthly</span>
+        <span class="value" id="meterTotal">₹0<span class="cents">.00</span></span>
+      </div>
+      <div class="meter-foot">Read-only scan · nothing is cancelled without you</div>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="wrap">
+      <div class="stat"><b>₹14,200</b><span>average bled per year, per household</span></div>
+      <div class="stat"><b>7.4</b><span>subscriptions the average person forgets about</span></div>
+      <div class="stat"><b>3 min</b><span>to connect and see your full ledger</span></div>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-tag">The process</span>
+        <h2>Three steps to stop guessing</h2>
+        <p>This isn't a feature list — it's the order things actually happen in, from first connect to full control.</p>
+      </div>
+      <div class="steps reveal">
+        <div class="step"><span class="num">01</span><h3>Connect</h3><p>Link Gmail or Outlook with read-only OAuth. Bleed never sends, deletes, or touches anything in your inbox.</p></div>
+        <div class="step"><span class="num">02</span><h3>Detect</h3><p>Every receipt, invoice, and renewal notice gets parsed automatically into one clean subscription ledger.</p></div>
+        <div class="step"><span class="num">03</span><h3>Control</h3><p>Get nudged before you're charged. Cancel, pause, or let it ride — the decision stays yours, always.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-tag">What it does</span>
+        <h2>Everything leaking, in one place</h2>
+        <p>No manual entry. No spreadsheet you'll abandon in a week.</p>
+      </div>
+      <div class="features-grid reveal">
+        <div class="feature"><div class="feature-icon">◈</div><h3>Inbox scan</h3><p>Finds subscriptions from receipt and renewal emails the moment you connect — no typing required.</p></div>
+        <div class="feature"><div class="feature-icon">◔</div><h3>Renewal alerts</h3><p>A nudge lands in your inbox days before a charge, not an apology after it.</p></div>
+        <div class="feature"><div class="feature-icon">▤</div><h3>One ledger view</h3><p>Every subscription, its cost, and its next due date — sorted, searchable, no clutter.</p></div>
+        <div class="feature"><div class="feature-icon">◑</div><h3>Bank-level privacy</h3><p>Encrypted end to end. Read-only access. Disconnect in one tap, any time.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-tag">Pricing</span>
+        <h2>Free to see the damage</h2>
+        <p>Pay only once you're ready to stop it.</p>
+      </div>
+      <div class="pricing-grid reveal">
+        <div class="price-card">
+          <div class="price-name">Free</div>
+          <div class="price-amt">₹0<span> forever</span></div>
+          <p class="price-desc">See where the money's going.</p>
+          <ul class="price-list"><li>Track up to 5 subscriptions</li><li>Manual + inbox-detected entries</li><li>Monthly summary email</li></ul>
+          <a href="signup.html" class="price-btn">Start free</a>
+        </div>
+        <div class="price-card pro">
+          <div class="price-name">Pro</div>
+          <div class="price-amt">₹99<span> / month</span></div>
+          <p class="price-desc">Stop the bleed for good.</p>
+          <ul class="price-list"><li>Unlimited subscriptions</li><li>Renewal alerts before you're charged</li><li>Full inbox auto-detection</li><li>Priority support</li></ul>
+          <a href="signup.html" class="price-btn">Go Pro</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="testimonials">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-tag">Who's using it</span>
+        <h2>People stopped guessing</h2>
+        <p>A few of the folks who found out what was quietly leaving their account.</p>
+      </div>
+      <div class="testimonial-grid reveal">
+        <div class="testimonial">
+          <div class="stars-row">★★★★★</div>
+          <p class="quote">"I connected my inbox expecting maybe three subscriptions. Bleed found eleven. Two of them I genuinely forgot existed."</p>
+          <div class="testimonial-who">
+            <div class="t-avatar" style="background:#A5183F;">RK</div>
+            <div><div class="t-who-name">Riya K.</div><div class="t-who-role">Product designer</div></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="stars-row">★★★★★</div>
+          <p class="quote">"The renewal alert saved me from a ₹4,000 annual charge I meant to cancel three months ago. Paid for itself instantly."</p>
+          <div class="testimonial-who">
+            <div class="t-avatar" style="background:#7A1230;">MS</div>
+            <div><div class="t-who-name">Mohit S.</div><div class="t-who-role">Software engineer</div></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="stars-row">★★★★★</div>
+          <p class="quote">"Setup took less time than making coffee. Now I actually know my monthly burn instead of vaguely dreading my statement."</p>
+          <div class="testimonial-who">
+            <div class="t-avatar" style="background:#3E7A4E;">PA</div>
+            <div><div class="t-who-name">Priya A.</div><div class="t-who-role">Freelance writer</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-tag">Questions</span>
+        <h2>Before you connect anything</h2>
+        <p>The things people usually ask before linking their inbox.</p>
+      </div>
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <button class="faq-q"><span>Can Bleed read or send my emails?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>No. Access is read-only through OAuth — Bleed can scan for receipts and renewal notices, but it can never send, delete, or modify anything in your inbox.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Does Bleed cancel subscriptions for me automatically?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Never without your say-so. Bleed surfaces what's renewing and when — you decide whether to cancel, pause, or keep it. Nothing happens on your accounts without you clicking confirm.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>What happens to my data if I disconnect?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Disconnecting revokes access immediately and your detected subscription history is deleted from our servers within 30 days, unless you ask us to remove it sooner.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Which inboxes does Bleed support?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Gmail and Outlook today, with more providers on the way. If you use a different provider, you can still add subscriptions manually on the Free plan.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Can I cancel my Bleed subscription anytime?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Yes — Pro is month-to-month with no lock-in. Cancel from your account settings and you'll keep access until the end of the billing period.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-strip">
+    <div class="wrap about-grid reveal">
+      <div>
+        <span class="section-tag">Why we built this</span>
+        <h2>Subscriptions got easy to start and easy to forget.</h2>
+        <p>One-click sign-ups made it effortless to start a subscription and just as effortless to lose track of it. Bleed exists to put that visibility back — not to nag you into cancelling everything, just to make sure every recurring charge is a decision you actually made.</p>
+        <p>Built for people who want control without spreadsheets.</p>
+      </div>
+      <div class="about-stats">
+        <div class="about-stat"><b>2026</b><span>Founded</span></div>
+        <div class="about-stat"><b>Bank-level</b><span>Encryption standard</span></div>
+        <div class="about-stat"><b>Read-only</b><span>Inbox access, always</span></div>
+        <div class="about-stat"><b>India-first</b><span>Built around INR pricing</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap reveal">
+      <h2>Your subscriptions won't audit themselves.</h2>
+      <div class="hero-ctas"><a href="signup.html" class="btn-primary">Get started free</a></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a href="index.html" class="logo">Bleed<span class="dot">.</span></a>
+    <div class="foot-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="login.html">Log in</a>
+    </div>
+    <span class="copy">© 2026 Bleed. Stop the bleed.</span>
+  </div>
+</footer>
+
+<script>
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const btn = item.querySelector('.faq-q');
+    const answer = item.querySelector('.faq-a');
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(other => {
+        if(other !== item){
+          other.classList.remove('open');
+          other.querySelector('.faq-a').style.maxHeight = null;
+        }
+      });
+      item.classList.toggle('open', !isOpen);
+      answer.style.maxHeight = !isOpen ? answer.scrollHeight + 'px' : null;
+    });
+  });
+
+  const subs = [
+    { name: 'Netflix Premium', amt: 649 }, { name: 'Spotify Family', amt: 179 },
+    { name: 'Amazon Prime', amt: 299 }, { name: 'iCloud+ 200GB', amt: 219 },
+    { name: 'Notion Plus', amt: 830 }, { name: 'Adobe CC', amt: 1675 }
+  ];
+  const meterBody = document.getElementById('meterBody');
+  const meterTotal = document.getElementById('meterTotal');
+  let target = 0, displayed = 0, i = 0;
+  function formatTotal(n){ return `₹${Math.floor(n).toLocaleString('en-IN')}<span class="cents">.00</span>`; }
+  function tickCounter(){
+    displayed += (target - displayed) * 0.12;
+    if(Math.abs(target - displayed) < 0.5) displayed = target;
+    meterTotal.innerHTML = formatTotal(displayed);
+    if(displayed !== target) requestAnimationFrame(tickCounter);
+  }
+  function addRow(){
+    if(i >= subs.length){
+      setTimeout(() => { meterBody.innerHTML = ''; target = 0; displayed = 0; i = 0; meterTotal.innerHTML = formatTotal(0); setTimeout(addRow, 700); }, 2600);
+      return;
+    }
+    const s = subs[i];
+    const row = document.createElement('div');
+    row.className = 'meter-row';
+    row.innerHTML = `<span class="name">${s.name}</span><span class="amt">−₹${s.amt}</span>`;
+    meterBody.appendChild(row);
+    target += s.amt;
+    requestAnimationFrame(tickCounter);
+    i++;
+    setTimeout(addRow, 750);
+  }
+  setTimeout(addRow, 900);
+
+  function animateStatDecimal(el, endValue){
+    const dur = 1400, start = performance.now();
+    function step(now){
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = (endValue * eased).toFixed(1);
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  function animateStat(el, endValue, prefix = '', suffix = ''){
+    const dur = 1400, start = performance.now();
+    function step(now){
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.round(endValue * eased).toLocaleString('en-IN') + suffix;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  const statsStrip = document.querySelector('.stats-strip');
+  let statsAnimated = false;
+  const statsIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting && !statsAnimated){
+        statsAnimated = true;
+        const s1 = document.querySelector('.stat:nth-child(1) b');
+        const s2 = document.querySelector('.stat:nth-child(2) b');
+        const s3 = document.querySelector('.stat:nth-child(3) b');
+        s1.textContent = '₹0'; s2.textContent = '0'; s3.textContent = '0 min';
+        animateStat(s1, 14200, '₹');
+        animateStat(s3, 3, '', ' min');
+        animateStatDecimal(s2, 7.4);
+      }
+    });
+  }, { threshold: 0.4 });
+  if(statsStrip) statsIO.observe(statsStrip);
+
+  const glowSpot = document.getElementById('glowSpot');
+  if(window.matchMedia('(pointer:fine)').matches && glowSpot){
+    let gx = window.innerWidth/2, gy = 200, tx = gx, ty = gy;
+    window.addEventListener('mousemove', (e) => { tx = e.clientX; ty = e.clientY; glowSpot.classList.add('active'); });
+    window.addEventListener('mouseleave', () => glowSpot.classList.remove('active'));
+    function followCursor(){
+      gx += (tx - gx) * 0.15; gy += (ty - gy) * 0.15;
+      glowSpot.style.transform = `translate3d(${gx}px, ${gy}px, 0) translate(-50%,-50%)`;
+      requestAnimationFrame(followCursor);
+    }
+    requestAnimationFrame(followCursor);
+  }
+
+  function magnetize(el, strength = 0.35){
+    if(!el) return;
+    let bx = 0, by = 0, tx2 = 0, ty2 = 0;
+    el.addEventListener('mousemove', (e) => {
+      const r = el.getBoundingClientRect();
+      tx2 = (e.clientX - r.left - r.width/2) * strength;
+      ty2 = (e.clientY - r.top - r.height/2) * strength;
+    });
+    el.addEventListener('mouseleave', () => { tx2 = 0; ty2 = 0; });
+    function loop(){
+      bx += (tx2 - bx) * 0.2; by += (ty2 - by) * 0.2;
+      el.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+  magnetize(document.getElementById('magBtn1'));
+  magnetize(document.getElementById('magBtn2'));
+
+  if(window.matchMedia('(pointer:fine)').matches){
+    document.querySelectorAll('.feature, .step').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(1200px) rotateX(${(-py*6).toFixed(2)}deg) rotateY(${(px*6).toFixed(2)}deg) translateZ(4px)`;
+      });
+      card.addEventListener('mouseleave', () => { card.style.transform = 'perspective(1200px) rotateX(0) rotateY(0) translateZ(0)'; });
+    });
+  }
+
+  const meterFrame = document.getElementById('meterFrame');
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => { lastY = window.scrollY; }, { passive: true });
+  function runEntrance(){
+    const dur = 900, start = performance.now(), fromY = 26;
+    function step(now){
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      meterFrame.style.opacity = eased;
+      meterFrame.style.transform = `translate3d(0, ${fromY * (1 - eased)}px, 0)`;
+      if(p < 1){ requestAnimationFrame(step); } else { requestAnimationFrame(parallaxLoop); }
+    }
+    requestAnimationFrame(step);
+  }
+  function parallaxLoop(){
+    if(meterFrame && lastY < window.innerHeight){
+      const offset = lastY * 0.06;
+      meterFrame.style.transform = `translate3d(0, ${-offset}px, 0)`;
+    }
+    requestAnimationFrame(parallaxLoop);
+  }
+  setTimeout(runEntrance, 500);
+</script>
+</body>
+</html>

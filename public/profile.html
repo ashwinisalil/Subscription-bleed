@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Bleed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="theme.js"></script>
+<script src="sound.js"></script>
+<style>
+  .app-nav .wrap{ height:72px; }
+  .app-nav .nav-links a.active{ color:var(--paper); position:relative; }
+  .app-nav .nav-links a.active::after{
+    content:''; position:absolute; left:0; right:0; bottom:-26px; height:2px; background:var(--wine-bright);
+  }
+
+  .page{ padding:44px 0 90px; }
+  .page-head{ margin-bottom:34px; }
+  .page-head h1{ font-size:32px; }
+  .page-head p{ color:var(--slate); font-size:14.5px; margin-top:6px; }
+
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(18px); } to{ opacity:1; transform:translateY(0); } }
+  .rise{ opacity:0; animation:riseIn .7s cubic-bezier(.16,1,.3,1) forwards; }
+
+  .profile-layout{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:20px; align-items:start; }
+  .panel{ background:var(--ink-2); border:1px solid var(--line); border-radius:14px; overflow:hidden; padding:32px; }
+
+  @media (max-width: 860px){
+    .profile-layout{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav app-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">Bleed<span class="dot">.</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Subscriptions</a>
+      <a href="calendar.html">Calendar</a>
+      <div class="avatar-wrap">
+        <button class="avatar" id="avatarBtn" type="button" style="border:none; cursor:pointer;">··</button>
+        <div class="avatar-menu" id="avatarMenu">
+          <div class="avatar-menu-header">
+            <div class="name" id="menuName">—</div>
+            <div class="email" id="menuEmail">—</div>
+          </div>
+          <a href="profile.html">View profile</a>
+          <button type="button" id="menuLogout" class="danger">Log out</button>
+        </div>
+      </div>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-label="Toggle sound">🔊</button>
+      <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle theme">🌙</button>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+  </div>
+</nav>
+
+<main class="wrap page">
+  <div class="page-head rise">
+    <h1>Profile & settings</h1>
+    <p>Your account, your preferences.</p>
+  </div>
+
+  <div class="profile-layout">
+    <div class="panel profile-card rise" style="animation-delay:.05s">
+      <div class="profile-avatar" id="profileAvatar">··</div>
+      <div class="profile-name" id="profileName">—</div>
+      <div class="profile-email" id="profileEmail">—</div>
+      <div class="profile-meta">
+        <div><b id="profileSince">—</b><span>Member since</span></div>
+        <div><b>Free</b><span>Plan</span></div>
+      </div>
+      <button class="btn-secondary btn-block" id="editProfileBtn" type="button">Edit name</button>
+
+      <form class="profile-edit-form" id="profileEditForm">
+        <div class="profile-edit-row">
+          <div class="field" style="margin-bottom:0;">
+            <label for="editFirstName">First name</label>
+            <input id="editFirstName" type="text" required>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="editLastName">Last name</label>
+            <input id="editLastName" type="text" required>
+          </div>
+        </div>
+        <div class="profile-edit-actions">
+          <button type="submit" class="btn-primary">Save</button>
+          <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+        </div>
+        <p class="modal-msg" id="profileMsg"></p>
+      </form>
+    </div>
+
+    <div class="panel rise" style="animation-delay:.12s">
+      <div class="settings-section">
+        <h3>Preferences</h3>
+        <div class="settings-toggle-row">
+          <div>
+            <div class="t-label">Renewal alerts</div>
+            <div class="t-sub" id="settingsNotifSub">Browser notifications before a subscription renews</div>
+          </div>
+          <button type="button" class="toggle-switch" id="settingsNotifToggle" aria-label="Toggle renewal alerts"></button>
+        </div>
+        <div class="settings-toggle-row">
+          <div>
+            <div class="t-label">Sound</div>
+            <div class="t-sub">Chime on alerts, click on the login lamp</div>
+          </div>
+          <button type="button" class="toggle-switch" id="settingsSoundToggle" aria-label="Toggle sound"></button>
+        </div>
+        <div class="settings-toggle-row">
+          <div>
+            <div class="t-label">Theme</div>
+            <div class="t-sub">Dark or light appearance</div>
+          </div>
+          <button type="button" class="toggle-switch" id="settingsThemeToggle" aria-label="Toggle theme"></button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Change password</h3>
+        <form id="passwordForm">
+          <div class="field">
+            <label for="curPassword">Current password</label>
+            <input id="curPassword" type="password" required>
+          </div>
+          <div class="field" style="margin-bottom:8px;">
+            <label for="newPassword">New password</label>
+            <input id="newPassword" type="password" placeholder="At least 8 characters" required>
+          </div>
+          <p class="modal-msg" id="passwordMsg"></p>
+          <button type="submit" class="btn-secondary btn-block" id="passwordSubmit">Update password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+  // ---- Auth guard ----
+  let currentUser = null;
+  function formatMemberSince(iso){
+    if(!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  }
+  function paintProfile(user){
+    const initials = (user.firstName[0] + (user.lastName[0] || '')).toUpperCase();
+    const fullName = `${user.firstName} ${user.lastName}`;
+    document.getElementById('avatarBtn').textContent = initials;
+    document.getElementById('menuName').textContent = fullName;
+    document.getElementById('menuEmail').textContent = user.email;
+    document.getElementById('profileAvatar').textContent = initials;
+    document.getElementById('profileName').textContent = fullName;
+    document.getElementById('profileEmail').textContent = user.email;
+    document.getElementById('profileSince').textContent = formatMemberSince(user.createdAt);
+    document.getElementById('editFirstName').value = user.firstName;
+    document.getElementById('editLastName').value = user.lastName;
+  }
+
+  (async function checkAuth(){
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!res.ok) throw new Error('not logged in');
+      const data = await res.json();
+      currentUser = data.user;
+      paintProfile(currentUser);
+    } catch (err) {
+      window.location.href = 'login.html';
+    }
+  })();
+
+  async function doLogout(){
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = 'login.html';
+  }
+  document.getElementById('menuLogout').addEventListener('click', doLogout);
+
+  // ---- Avatar dropdown ----
+  const avatarBtn = document.getElementById('avatarBtn');
+  const avatarMenu = document.getElementById('avatarMenu');
+  avatarBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    avatarMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!avatarMenu.contains(e.target) && e.target !== avatarBtn) {
+      avatarMenu.classList.remove('open');
+    }
+  });
+
+  // ---- Mobile nav toggle ----
+  document.getElementById('navToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+
+  // ---- Sound toggle (nav) ----
+  const soundToggle = document.getElementById('soundToggle');
+  function updateSoundToggle(){
+    const on = BleedSound.isEnabled();
+    soundToggle.textContent = on ? '🔊' : '🔇';
+    soundToggle.classList.toggle('muted', !on);
+  }
+  updateSoundToggle();
+  soundToggle.addEventListener('click', () => {
+    BleedSound.unlock();
+    BleedSound.setEnabled(!BleedSound.isEnabled());
+    updateSoundToggle();
+    syncSettingsToggles();
+  });
+
+  // ---- Edit profile form ----
+  const editProfileBtn = document.getElementById('editProfileBtn');
+  const profileEditForm = document.getElementById('profileEditForm');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const profileMsg = document.getElementById('profileMsg');
+
+  editProfileBtn.addEventListener('click', () => {
+    profileEditForm.classList.add('open');
+    editProfileBtn.style.display = 'none';
+  });
+  cancelEditBtn.addEventListener('click', () => {
+    profileEditForm.classList.remove('open');
+    editProfileBtn.style.display = 'block';
+    profileMsg.className = 'modal-msg';
+    document.getElementById('editFirstName').value = currentUser.firstName;
+    document.getElementById('editLastName').value = currentUser.lastName;
+  });
+
+  profileEditForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const lastName = document.getElementById('editLastName').value.trim();
+    const saveBtn = profileEditForm.querySelector('button[type="submit"]');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ firstName, lastName }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save changes.');
+
+      currentUser = data.user;
+      paintProfile(currentUser);
+      profileMsg.className = 'modal-msg success';
+      profileMsg.textContent = 'Profile updated.';
+      setTimeout(() => {
+        profileEditForm.classList.remove('open');
+        editProfileBtn.style.display = 'block';
+        profileMsg.className = 'modal-msg';
+      }, 1200);
+    } catch (err) {
+      profileMsg.className = 'modal-msg error';
+      profileMsg.textContent = err.message;
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    }
+  });
+
+  // ---- Settings toggles ----
+  const settingsNotifToggle = document.getElementById('settingsNotifToggle');
+  const settingsSoundToggle = document.getElementById('settingsSoundToggle');
+  const settingsThemeToggle = document.getElementById('settingsThemeToggle');
+  const settingsNotifSub = document.getElementById('settingsNotifSub');
+
+  function syncSettingsToggles(){
+    const notifOn = typeof Notification !== 'undefined' && Notification.permission === 'granted';
+    settingsNotifToggle.classList.toggle('on', notifOn);
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      settingsNotifSub.textContent = 'Blocked — re-enable from Chrome\'s site settings';
+    } else {
+      settingsNotifSub.textContent = 'Browser notifications before a subscription renews';
+    }
+    settingsSoundToggle.classList.toggle('on', BleedSound.isEnabled());
+    settingsThemeToggle.classList.toggle('on', BleedTheme.getTheme() === 'light');
+  }
+  syncSettingsToggles();
+
+  settingsNotifToggle.addEventListener('click', async () => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission === 'denied') {
+      showToast('Notifications blocked', 'Re-enable them from Chrome\'s site settings (the lock icon in the address bar).');
+      return;
+    }
+    if (Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+    syncSettingsToggles();
+  });
+  settingsSoundToggle.addEventListener('click', () => {
+    BleedSound.unlock();
+    BleedSound.setEnabled(!BleedSound.isEnabled());
+    updateSoundToggle();
+    syncSettingsToggles();
+  });
+  settingsThemeToggle.addEventListener('click', () => {
+    BleedTheme.toggleTheme();
+    syncSettingsToggles();
+    document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+      const isLight = BleedTheme.getTheme() === 'light';
+      btn.textContent = isLight ? '☀️' : '🌙';
+    });
+  });
+
+  // ---- Toasts (for the notification-blocked message) ----
+  const toastStack = document.getElementById('toastStack');
+  function showToast(title, body){
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<div class="t-title">${title}</div><div class="t-body">${body}</div>`;
+    toastStack.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('in'));
+    setTimeout(() => {
+      toast.classList.remove('in');
+      setTimeout(() => toast.remove(), 400);
+    }, 6000);
+  }
+
+  // ---- Change password ----
+  const passwordForm = document.getElementById('passwordForm');
+  const passwordMsg = document.getElementById('passwordMsg');
+  passwordForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('passwordSubmit');
+    const currentPassword = document.getElementById('curPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    passwordMsg.className = 'modal-msg';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Updating…';
+
+    try {
+      const res = await fetch('/api/auth/password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Could not update password.');
+
+      passwordMsg.className = 'modal-msg success';
+      passwordMsg.textContent = 'Password updated.';
+      passwordForm.reset();
+    } catch(err){
+      passwordMsg.className = 'modal-msg error';
+      passwordMsg.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Update password';
+    }
+  });
+
+  // ---- Scroll reveal ----
+  document.querySelectorAll('.rise').forEach((el, i) => { el.style.animationDelay = (i * 0.06) + 's'; });
+</script>
+</body>
+</html>

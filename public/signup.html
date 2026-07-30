@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create your account — Bleed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="theme.js"></script>
+<style>
+  body{ min-height:100vh; }
+  .split{
+    min-height:100vh; display:grid; grid-template-columns:1.05fr 0.95fr;
+  }
+  /* ---------- LEFT: brand panel ---------- */
+  .brand-panel{
+    position:relative; overflow:hidden;
+    padding:52px 56px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    border-right:1px solid var(--line);
+  }
+  .brand-panel .blob{ position:absolute; border-radius:50%; filter:blur(100px); opacity:0.4; will-change:transform; }
+  .brand-panel .blob-1{ width:460px; height:460px; background:radial-gradient(circle, rgba(165,24,63,0.55), transparent 70%); top:-160px; left:-140px; animation:drift1 16s ease-in-out infinite alternate; }
+  .brand-panel .blob-2{ width:380px; height:380px; background:radial-gradient(circle, rgba(198,72,91,0.35), transparent 70%); bottom:-140px; right:-120px; animation:drift2 20s ease-in-out infinite alternate; }
+  @keyframes drift1{ from{ transform:translate3d(0,0,0) scale(1); } to{ transform:translate3d(30px,50px,0) scale(1.1); } }
+  @keyframes drift2{ from{ transform:translate3d(0,0,0) scale(1); } to{ transform:translate3d(-40px,-30px,0) scale(0.9); } }
+
+  .brand-panel > *{ position:relative; z-index:2; }
+  .brand-panel .logo{ font-size:24px; }
+  .pitch{ max-width:420px; opacity:0; animation:riseIn .9s cubic-bezier(.16,1,.3,1) .15s forwards; }
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:translateY(0); } }
+  .pitch .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--rose); margin-bottom:18px; display:block; }
+  .pitch h1{ font-size:clamp(32px, 3.6vw, 46px); line-height:1.05; margin-bottom:18px; }
+  .pitch h1 em{ font-style:italic; color:var(--wine-bright); }
+  .pitch p{ color:var(--slate); font-size:15.5px; }
+
+  .mini-ledger{
+    opacity:0; animation:riseIn .9s cubic-bezier(.16,1,.3,1) .3s forwards;
+    background:var(--ink-2); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; max-width:360px;
+  }
+  .mini-ledger .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .mini-ledger .row:last-child{ border-bottom:none; }
+  .mini-ledger .amt{ font-family:'IBM Plex Mono', monospace; color:var(--rose); }
+  .mini-ledger .foot{ display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--slate); }
+  .mini-ledger .foot b{ color:var(--paper); font-family:'IBM Plex Mono', monospace; font-size:15px; }
+
+  /* ---------- RIGHT: form panel ---------- */
+  .form-panel{ display:flex; align-items:center; justify-content:center; padding:56px 40px; }
+  .form-card{ width:400px; max-width:100%; opacity:0; animation:riseIn .9s cubic-bezier(.16,1,.3,1) .2s forwards; }
+  .form-card h2{ font-size:29px; margin-bottom:8px; }
+  .form-card .sub{ color:var(--slate); font-size:14.5px; margin-bottom:30px; }
+  .name-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .terms{ font-size:12.5px; color:var(--slate); margin:-6px 0 22px; line-height:1.5; }
+  .terms a{ color:var(--rose); }
+  .terms a:hover{ text-decoration:underline; }
+  .divider{ display:flex; align-items:center; gap:14px; margin:26px 0; color:var(--slate); font-size:12.5px; }
+  .divider::before, .divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .alt{ text-align:center; font-size:13.5px; color:var(--slate); margin-top:22px; }
+  .alt a{ color:var(--rose); }
+  .alt a:hover{ text-decoration:underline; }
+
+  @media (max-width:900px){
+    .split{ grid-template-columns:1fr; }
+    .brand-panel{ display:none; }
+    .form-panel{ padding:40px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="split">
+  <div class="brand-panel">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <a href="index.html" class="logo serif" style="font-style:italic;">Bleed<span class="dot">.</span></a>
+    <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle theme" style="position:fixed; top:26px; right:28px; z-index:60;">🌙</button>
+
+    <div class="pitch">
+      <span class="eyebrow">Join in under 3 minutes</span>
+      <h1>Find out exactly what's <em>bleeding</em> you dry.</h1>
+      <p>Connect your inbox once. Bleed builds your full subscription ledger automatically — no spreadsheets, no guessing.</p>
+    </div>
+
+    <div class="mini-ledger">
+      <div class="row"><span>Netflix Premium</span><span class="amt">−₹649</span></div>
+      <div class="row"><span>Spotify Family</span><span class="amt">−₹179</span></div>
+      <div class="row"><span>Adobe CC</span><span class="amt">−₹1,675</span></div>
+      <div class="foot"><span>Total this month</span><b>₹2,503</b></div>
+    </div>
+  </div>
+
+  <div class="form-panel">
+    <div class="form-card">
+      <h2>Create your account</h2>
+      <p class="sub">Free to start. See your first ledger today.</p>
+      <form id="signupForm">
+        <div class="name-row">
+          <div class="field"><label for="fname">First name</label><input id="fname" type="text" placeholder="Aryan" required></div>
+          <div class="field"><label for="lname">Last name</label><input id="lname" type="text" placeholder="Sharma" required></div>
+        </div>
+        <div class="field"><label for="semail">Email</label><input id="semail" type="email" placeholder="you@email.com" required></div>
+        <div class="field"><label for="spass">Password</label><input id="spass" type="password" placeholder="At least 8 characters" required></div>
+        <p class="terms">By creating an account, you agree to Bleed's <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+        <p class="form-error" id="signupError" style="color:var(--rose); font-size:13px; margin-bottom:14px; display:none;"></p>
+        <button type="submit" class="btn-primary btn-block" id="signupBtn">Create account</button>
+      </form>
+      <div class="divider">or</div>
+      <button class="btn-secondary btn-block">Continue with Google</button>
+      <p class="alt">Already have an account? <a href="login.html">Log in</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('signupBtn');
+    const errorEl = document.getElementById('signupError');
+    const payload = {
+      firstName: document.getElementById('fname').value.trim(),
+      lastName: document.getElementById('lname').value.trim(),
+      email: document.getElementById('semail').value.trim(),
+      password: document.getElementById('spass').value,
+    };
+
+    errorEl.style.display = 'none';
+    btn.textContent = 'Creating account…';
+    btn.style.opacity = '0.75';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong.');
+      }
+
+      btn.textContent = 'Account created!';
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      btn.textContent = 'Create account';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

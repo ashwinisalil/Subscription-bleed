@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Bleed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="theme.js"></script>
+<script src="sound.js"></script>
+<style>
+  .app-nav .wrap{ height:72px; }
+  .app-nav .nav-links a.active{ color:var(--paper); }
+  .app-nav .nav-links a.active{ position:relative; }
+  .app-nav .nav-links a.active::after{
+    content:''; position:absolute; left:0; right:0; bottom:-26px; height:2px; background:var(--wine-bright);
+  }
+
+  .page{ padding:44px 0 90px; }
+  .page-head{
+    display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:34px; flex-wrap:wrap; gap:16px;
+  }
+  .page-head h1{ font-size:32px; }
+  .page-head p{ color:var(--slate); font-size:14.5px; margin-top:6px; }
+
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(18px); } to{ opacity:1; transform:translateY(0); } }
+  .rise{ opacity:0; animation:riseIn .7s cubic-bezier(.16,1,.3,1) forwards; }
+
+  /* ---------- SUMMARY CARDS ---------- */
+  .summary-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:40px; }
+  .summary-card{
+    background:var(--ink-2); border:1px solid var(--line); border-radius:14px; padding:24px 26px;
+    transform-style:preserve-3d; will-change:transform;
+    transition:transform .35s cubic-bezier(.16,1,.3,1), border-color .25s ease;
+  }
+  .summary-card:hover{ border-color:var(--line-strong); }
+  .summary-card .label{ font-size:13px; color:var(--slate); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .summary-card .icon{ width:26px; height:26px; border-radius:7px; background:rgba(122,18,48,0.18); display:flex; align-items:center; justify-content:center; color:var(--rose); font-size:13px; }
+  .summary-card .value{ font-family:'IBM Plex Mono', monospace; font-size:30px; }
+  .summary-card .delta{ font-size:12.5px; color:var(--slate); margin-top:8px; }
+  .summary-card .delta.up{ color:var(--rose); }
+
+  /* ---------- MAIN GRID ---------- */
+  .main-grid{ display:grid; grid-template-columns:1.5fr 1fr; gap:20px; align-items:start; }
+
+  .panel{
+    background:var(--ink-2); border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  }
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--line); }
+  .panel-head h2{ font-size:17px; }
+  .panel-head .filter{ font-size:12.5px; color:var(--slate); font-family:'IBM Plex Mono', monospace; }
+
+  /* subscription list */
+  .sub-row{
+    display:flex; align-items:center; gap:14px; padding:16px 24px;
+    border-bottom:1px solid var(--line);
+    transition:background .2s ease;
+  }
+  .sub-row:last-child{ border-bottom:none; }
+  .sub-row:hover{ background:var(--ink-3); }
+  .sub-mark{
+    width:38px; height:38px; border-radius:9px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:600; font-size:15px; color:var(--paper);
+  }
+  .sub-info{ flex:1; min-width:0; }
+  .sub-info .name{ font-size:14.5px; margin-bottom:2px; }
+  .sub-info .meta{ font-size:12.5px; color:var(--slate); }
+  .sub-amt{ font-family:'IBM Plex Mono', monospace; font-size:14.5px; text-align:right; }
+  .sub-amt .cycle{ display:block; font-size:11px; color:var(--slate); font-family:'IBM Plex Sans', sans-serif; margin-top:2px; }
+  .status-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .status-dot.due{ background:var(--amber); box-shadow:0 0 0 3px rgba(232,163,77,0.18); }
+  .status-dot.ok{ background:#5C8A6E; box-shadow:0 0 0 3px rgba(92,138,110,0.18); }
+
+  /* mini bar chart */
+  .chart-body{ padding:24px; }
+  .bars{ display:flex; align-items:flex-end; gap:10px; height:140px; margin-bottom:10px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar{
+    width:100%; border-radius:5px 5px 2px 2px;
+    background:linear-gradient(180deg, var(--wine-bright), var(--wine));
+    height:0%;
+    transition:height 1s cubic-bezier(.16,1,.3,1);
+  }
+  .bar-col span{ font-size:10.5px; color:var(--slate); margin-top:8px; }
+  .chart-total{ text-align:center; padding-top:14px; border-top:1px solid var(--line); }
+  .chart-total .value{ font-family:'IBM Plex Mono', monospace; font-size:22px; }
+  .chart-total .label{ font-size:12px; color:var(--slate); margin-top:2px; }
+
+  /* renewals */
+  .renewal-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 24px; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .renewal-row:last-child{ border-bottom:none; }
+  .renewal-row .date{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--rose); }
+
+  .notif-btn{ display:flex; align-items:center; gap:9px; }
+  .notif-dot{ width:8px; height:8px; border-radius:50%; background:var(--slate); flex-shrink:0; transition:background .2s ease, box-shadow .2s ease; }
+  .notif-dot.on{ background:#6FAE84; box-shadow:0 0 0 3px rgba(111,174,132,0.18); }
+  .notif-dot.denied{ background:var(--rose); box-shadow:0 0 0 3px rgba(198,72,91,0.18); }
+
+  .toast-stack{
+    position:fixed; bottom:24px; right:24px; z-index:80;
+    display:flex; flex-direction:column; gap:10px; align-items:flex-end;
+  }
+  .toast{
+    background:var(--ink-2); border:1px solid var(--line-strong); border-radius:12px;
+    padding:14px 18px; max-width:320px;
+    box-shadow:0 20px 50px -20px rgba(0,0,0,0.6);
+    opacity:0; transform:translateY(10px);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .toast.in{ opacity:1; transform:translateY(0); }
+  .toast .t-title{ font-size:13.5px; font-weight:600; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+  .toast .t-title::before{ content:'🔔'; font-size:12px; }
+  .toast .t-body{ font-size:12.5px; color:var(--slate); }
+
+  .scan-card{ background:linear-gradient(135deg, rgba(122,18,48,0.14), var(--ink-2)); border:1px solid var(--line-strong); border-radius:14px; padding:24px 26px; margin-bottom:28px; }
+
+  .scan-card-top{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .scan-card-left{ display:flex; gap:16px; align-items:flex-start; }
+  .scan-icon{ width:40px; height:40px; border-radius:10px; background:rgba(165,24,63,0.25); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--rose); flex-shrink:0; }
+  .scan-card h3{ font-size:16px; margin-bottom:4px; font-family:'IBM Plex Sans',sans-serif; font-weight:600; }
+  .scan-card p{ font-size:13.5px; color:var(--slate); }
+  .link-btn{ background:none; border:none; color:var(--rose); font-size:13px; cursor:pointer; padding:0; font-family:'IBM Plex Sans',sans-serif; }
+  .link-btn:hover{ text-decoration:underline; }
+  .scan-status{ margin-top:16px; font-size:13px; color:var(--slate); display:flex; align-items:center; gap:10px; }
+  .scan-dot{ width:6px; height:6px; border-radius:50%; background:var(--amber); animation:pulseDot 1s ease-in-out infinite; flex-shrink:0; }
+  @keyframes pulseDot{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+  .scan-status.success{ color:#6FAE84; }
+  .scan-status.error{ color:var(--rose); }
+  .paste-box{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+  .paste-box textarea{ width:100%; background:var(--ink); border:1px solid var(--line-strong); border-radius:8px; padding:12px; color:var(--paper); font-size:13.5px; font-family:'IBM Plex Sans',sans-serif; resize:vertical; }
+  .paste-box textarea:focus{ outline:none; border-color:var(--wine-bright); }
+  .ai-badge{
+    font-size:10px; font-family:'IBM Plex Mono', monospace; letter-spacing:0.04em;
+    color:var(--amber); background:rgba(232,163,77,0.14); border:1px solid rgba(232,163,77,0.3);
+    padding:2px 7px; border-radius:20px; margin-left:8px;
+  }
+  .manual-badge{
+    font-size:10px; font-family:'IBM Plex Mono', monospace; letter-spacing:0.04em;
+    color:var(--slate); background:rgba(154,151,160,0.14); border:1px solid rgba(154,151,160,0.3);
+    padding:2px 7px; border-radius:20px; margin-left:8px;
+  }
+
+  @media (max-width: 980px){
+    .summary-grid{ grid-template-columns:1fr; }
+    .main-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav app-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">Bleed<span class="dot">.</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="dashboard.html">Subscriptions</a>
+      <a href="calendar.html">Calendar</a>
+      <div class="avatar-wrap">
+        <button class="avatar" id="avatarBtn" type="button" style="border:none; cursor:pointer;">··</button>
+        <div class="avatar-menu" id="avatarMenu">
+          <div class="avatar-menu-header">
+            <div class="name" id="menuName">—</div>
+            <div class="email" id="menuEmail">—</div>
+          </div>
+          <a href="profile.html">View profile</a>
+          <button type="button" id="menuLogout" class="danger">Log out</button>
+        </div>
+      </div>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-label="Toggle sound">🔊</button>
+      <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle theme">🌙</button>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+  </div>
+</nav>
+
+<main class="wrap page">
+  <div class="page-head rise">
+    <div>
+      <h1 id="greeting">Hello!</h1>
+      <p>Here's what's leaving your account this month.</p>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button class="btn-secondary notif-btn" id="notifBtn" type="button">
+        <span class="notif-dot" id="notifDot"></span>
+        <span id="notifBtnText">Enable renewal alerts</span>
+      </button>
+      <button class="btn-secondary" id="addSubBtn" type="button">+ Add subscription</button>
+    </div>
+  </div>
+
+  <div class="scan-card rise" style="animation-delay:.02s" id="scanCard">
+    <div class="scan-card-top">
+      <div class="scan-card-left">
+        <div class="scan-icon">✦</div>
+        <div>
+          <h3>Scan your inbox with AI</h3>
+          <p>Runs Bleed's detection model against a demo inbox. <button class="link-btn" id="pasteToggle" type="button">Or paste an email to test →</button></p>
+        </div>
+      </div>
+      <button class="btn-primary" id="scanBtn">Scan demo inbox</button>
+    </div>
+    <div class="scan-status" id="scanStatus" style="display:none;"></div>
+    <div class="paste-box" id="pasteBox" style="display:none;">
+      <textarea id="pasteText" placeholder="Paste an email's subject + body here…" rows="4"></textarea>
+      <button class="btn-secondary" id="pasteScanBtn" type="button" style="align-self:flex-start;">Scan this text</button>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card rise" style="animation-delay:.05s">
+      <div class="label"><span class="icon">₹</span> Monthly bleed</div>
+      <div class="value" id="totalValue">₹0</div>
+      <div class="delta up">↑ 8.2% vs last month</div>
+    </div>
+    <div class="summary-card rise" style="animation-delay:.12s">
+      <div class="label"><span class="icon">▤</span> Active subscriptions</div>
+      <div class="value" id="countValue">0</div>
+      <div class="delta">2 added this month</div>
+    </div>
+    <div class="summary-card rise" style="animation-delay:.19s">
+      <div class="label"><span class="icon">◔</span> Next renewal</div>
+      <div class="value" style="font-size:22px;">Netflix</div>
+      <div class="delta">in 3 days · ₹649</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel rise" style="animation-delay:.1s">
+      <div class="panel-head">
+        <h2>Your subscriptions</h2>
+        <span class="filter">SORTED BY COST</span>
+      </div>
+      <div id="subList"></div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <div class="panel rise" style="animation-delay:.18s">
+        <div class="panel-head"><h2>Last 6 months</h2></div>
+        <div class="chart-body">
+          <div class="bars" id="bars"></div>
+          <div class="chart-total">
+            <div class="value">₹3,851</div>
+            <div class="label">average monthly spend</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel rise" style="animation-delay:.21s">
+        <div class="panel-head">
+          <h2>Upcoming renewals</h2>
+          <a href="calendar.html" class="filter" style="text-decoration:none;">VIEW CALENDAR →</a>
+        </div>
+        <div class="renewal-row"><span>Netflix Premium</span><span class="date">Jul 28</span></div>
+        <div class="renewal-row"><span>Adobe CC</span><span class="date">Aug 2</span></div>
+        <div class="renewal-row"><span>Notion Plus</span><span class="date">Aug 9</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- Add Subscription Modal -->
+<div class="modal-overlay" id="addSubOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Add a subscription</h2>
+      <button class="modal-close" id="addSubClose" type="button" aria-label="Close">×</button>
+    </div>
+    <form id="addSubForm">
+      <div class="field">
+        <label for="subVendor">Name</label>
+        <input id="subVendor" type="text" placeholder="e.g. YouTube Premium" required>
+      </div>
+      <div class="modal-row">
+        <div class="field">
+          <label for="subAmount">Amount (₹)</label>
+          <input id="subAmount" type="number" min="0" step="0.01" placeholder="149">
+        </div>
+        <div class="field">
+          <label for="subCycle">Billing cycle</label>
+          <select id="subCycle" class="field-select">
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="unknown">Not sure</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="subRenewal">Next renewal date</label>
+        <input id="subRenewal" type="date">
+      </div>
+      <p class="modal-msg" id="addSubMsg"></p>
+      <button type="submit" class="btn-primary btn-block" id="addSubSubmit">Add subscription</button>
+    </form>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a href="index.html" class="logo">Bleed<span class="dot">.</span></a>
+    <div class="foot-links">
+      <a href="index.html">Home</a>
+      <a href="login.html" id="logoutLink">Log out</a>
+    </div>
+    <span class="copy">© 2026 Bleed. Stop the bleed.</span>
+  </div>
+</footer>
+
+<script>
+  // ---- Auth guard: bounce to login if not authenticated ----
+  let currentUser = null;
+
+  function formatMemberSince(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  }
+
+  function paintProfile(user){
+    const initials = (user.firstName[0] + (user.lastName[0] || '')).toUpperCase();
+    const fullName = `${user.firstName} ${user.lastName}`;
+
+    document.getElementById('greeting').textContent = `Hello, ${user.firstName}!`;
+    document.getElementById('avatarBtn').textContent = initials;
+    document.getElementById('menuName').textContent = fullName;
+    document.getElementById('menuEmail').textContent = user.email;
+  }
+
+  (async function checkAuth(){
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!res.ok) throw new Error('not logged in');
+      const data = await res.json();
+      currentUser = data.user;
+      paintProfile(currentUser);
+    } catch (err) {
+      window.location.href = 'login.html';
+    }
+  })();
+
+  async function doLogout(){
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = 'login.html';
+  }
+  document.getElementById('logoutLink').addEventListener('click', (e) => { e.preventDefault(); doLogout(); });
+  document.getElementById('menuLogout').addEventListener('click', doLogout);
+
+  // ---- Avatar dropdown ----
+  const avatarBtn = document.getElementById('avatarBtn');
+  const avatarMenu = document.getElementById('avatarMenu');
+  avatarBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    avatarMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!avatarMenu.contains(e.target) && e.target !== avatarBtn) {
+      avatarMenu.classList.remove('open');
+    }
+  });
+
+  // ---------- Browser notifications ----------
+  const notifBtn = document.getElementById('notifBtn');
+  const notifDot = document.getElementById('notifDot');
+  const notifBtnText = document.getElementById('notifBtnText');
+  const toastStack = document.getElementById('toastStack');
+  const NOTIF_PREF_KEY = 'bleed_notifications_enabled';
+
+  function showToast(title, body){
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<div class="t-title">${title}</div><div class="t-body">${body}</div>`;
+    toastStack.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('in'));
+    setTimeout(() => {
+      toast.classList.remove('in');
+      setTimeout(() => toast.remove(), 400);
+    }, 6000);
+  }
+
+  // Fires a real Chrome notification if permission is granted; always shows
+  // an in-app toast too, so nothing is missed if the tab isn't focused
+  // or permission was never granted.
+  function notify(title, body){
+    showToast(title, body);
+    BleedSound.chime();
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        const n = new Notification(title, {
+          body,
+          icon: undefined,
+          tag: 'bleed-' + title.replace(/\s+/g, '-').toLowerCase(),
+        });
+        n.onclick = () => { window.focus(); n.close(); };
+      } catch (e) { /* some browsers restrict Notification outside user gesture on first use */ }
+    }
+  }
+
+  function updateNotifButton(){
+    if (typeof Notification === 'undefined') {
+      notifBtnText.textContent = 'Notifications unsupported';
+      notifBtn.disabled = true;
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      notifDot.className = 'notif-dot on';
+      notifBtnText.textContent = 'Renewal alerts on';
+    } else if (Notification.permission === 'denied') {
+      notifDot.className = 'notif-dot denied';
+      notifBtnText.textContent = 'Notifications blocked';
+    } else {
+      notifDot.className = 'notif-dot';
+      notifBtnText.textContent = 'Enable renewal alerts';
+    }
+  }
+  updateNotifButton();
+
+  notifBtn.addEventListener('click', async () => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission === 'denied') {
+      showToast('Notifications blocked', 'Re-enable them from Chrome\'s site settings (the lock icon in the address bar).');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      // Already on — this click just re-confirms with a test notification.
+      notify('Bleed alerts are on', 'You\'ll be notified here before renewals and after scans.');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    updateNotifButton();
+    if (permission === 'granted') {
+      localStorage.setItem(NOTIF_PREF_KEY, 'true');
+      notify('Renewal alerts enabled', 'Bleed will notify you before subscriptions renew.');
+    }
+  });
+
+  // ---------- Renewal checking ----------
+  // Demo renewal dates are static strings in the markup; parse against the
+  // current year so "days away" math is meaningful whenever this runs.
+  function parseDemoDate(label){
+    const year = new Date().getFullYear();
+    const parsed = new Date(`${label} ${year}`);
+    return isNaN(parsed) ? null : parsed;
+  }
+  function daysUntil(date){
+    const ms = date.setHours(0,0,0,0) - new Date().setHours(0,0,0,0);
+    return Math.round(ms / 86400000);
+  }
+  function checkUpcomingRenewals(){
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    document.querySelectorAll('.renewal-row').forEach(row => {
+      const name = row.querySelector('span:first-child')?.textContent;
+      const dateLabel = row.querySelector('.date')?.textContent;
+      if (!name || !dateLabel) return;
+      const date = parseDemoDate(dateLabel);
+      if (!date) return;
+      const days = daysUntil(date);
+      if (days >= 0 && days <= 3) {
+        notify(`${name} renews soon`, days === 0 ? 'Renews today.' : `Renews in ${days} day${days === 1 ? '' : 's'}.`);
+      }
+    });
+  }
+  setTimeout(checkUpcomingRenewals, 1200);
+
+  // ---------- Sound mute toggle ----------
+  const soundToggle = document.getElementById('soundToggle');
+  function updateSoundToggle(){
+    const on = BleedSound.isEnabled();
+    soundToggle.textContent = on ? '🔊' : '🔇';
+    soundToggle.classList.toggle('muted', !on);
+    soundToggle.setAttribute('aria-label', on ? 'Mute sound' : 'Unmute sound');
+  }
+  updateSoundToggle();
+  soundToggle.addEventListener('click', () => {
+    BleedSound.unlock();
+    const newState = !BleedSound.isEnabled();
+    BleedSound.setEnabled(newState);
+    updateSoundToggle();
+    if (newState) BleedSound.chime();
+  });
+  // Unlock audio on first interaction anywhere, so the chime isn't silently
+  // blocked by the browser's autoplay policy the first time it's needed.
+  document.addEventListener('pointerdown', () => BleedSound.unlock(), { once: true });
+
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+
+  const subs = [
+    { name:'Adobe Creative Cloud', initials:'Ad', color:'#A5183F', amt:1675, cycle:'monthly', status:'ok' },
+    { name:'Notion Plus', initials:'No', color:'#7A1230', amt:830, cycle:'monthly', status:'ok' },
+    { name:'Netflix Premium', initials:'Nf', color:'#C6485B', amt:649, cycle:'renews in 3 days', status:'due' },
+    { name:'Amazon Prime', initials:'Az', color:'#9A97A0', amt:299, cycle:'yearly', status:'ok' },
+    { name:'iCloud+ 200GB', initials:'iC', color:'#5C5A62', amt:219, cycle:'monthly', status:'ok' },
+    { name:'Spotify Family', initials:'Sp', color:'#3E7A4E', amt:179, cycle:'monthly', status:'ok' }
+  ];
+
+  const subList = document.getElementById('subList');
+  subs.forEach((s, idx) => {
+    const row = document.createElement('div');
+    row.className = 'sub-row rise';
+    row.style.animationDelay = (0.15 + idx * 0.05) + 's';
+    row.innerHTML = `
+      <div class="sub-mark" style="background:${s.color}22; color:${s.color === '#9A97A0' ? 'var(--paper)' : s.color};">${s.initials}</div>
+      <div class="sub-info">
+        <div class="name">${s.name}</div>
+        <div class="meta">${s.cycle}</div>
+      </div>
+      <span class="status-dot ${s.status}"></span>
+      <div class="sub-amt">−₹${s.amt.toLocaleString('en-IN')}<span class="cycle">/mo</span></div>
+    `;
+    subList.appendChild(row);
+  });
+
+  const totalMonthly = () => subs.reduce((sum, s) => sum + s.amt, 0) + aiSubs.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const totalCount = () => subs.length + aiSubs.length;
+
+  function animateValue(el, end, prefix = ''){
+    const dur = 1200, start = performance.now();
+    const startVal = parseFloat((el.textContent || '0').replace(/[^\d.]/g, '')) || 0;
+    function step(now){
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = startVal + (end - startVal) * eased;
+      el.textContent = prefix + Math.round(val).toLocaleString('en-IN');
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  function refreshTotals(){
+    animateValue(document.getElementById('totalValue'), totalMonthly(), '₹');
+    animateValue(document.getElementById('countValue'), totalCount());
+  }
+  setTimeout(refreshTotals, 300);
+
+  // ---------- AI-detected subscriptions ----------
+  let aiSubs = [];
+  const aiPalette = ['#A5183F', '#7A1230', '#C6485B', '#6FAE84', '#8B6FAE', '#AE8B6F'];
+  function colorFor(name){
+    let hash = 0;
+    for(let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return aiPalette[Math.abs(hash) % aiPalette.length];
+  }
+  function renderAiSubs(){
+    document.querySelectorAll('.sub-row.ai-detected').forEach(el => el.remove());
+    aiSubs.forEach((s, idx) => {
+      const color = colorFor(s.vendor);
+      const initials = s.vendor.slice(0, 2).toUpperCase();
+      const badge = s.source === 'manual' ? '<span class="manual-badge">MANUAL</span>' : '<span class="ai-badge">AI</span>';
+      const row = document.createElement('div');
+      row.className = 'sub-row ai-detected';
+      row.style.opacity = '0';
+      row.style.transform = 'translateY(-6px)';
+      row.style.transition = 'opacity .5s ease, transform .5s ease';
+      row.innerHTML = `
+        <div class="sub-mark" style="background:${color}22; color:${color};">${initials}</div>
+        <div class="sub-info">
+          <div class="name">${s.vendor}${badge}</div>
+          <div class="meta">${s.billingCycle || 'unknown cycle'}${s.nextRenewal ? ' · renews ' + s.nextRenewal : ''}</div>
+        </div>
+        <span class="status-dot ok"></span>
+        <div class="sub-amt">${s.amount ? '−₹' + s.amount.toLocaleString('en-IN') : '—'}<span class="cycle">/mo</span></div>
+      `;
+      subList.insertBefore(row, subList.firstChild);
+      requestAnimationFrame(() => {
+        setTimeout(() => { row.style.opacity = '1'; row.style.transform = 'translateY(0)'; }, idx * 80);
+      });
+    });
+  }
+
+  async function loadPersistedScans(){
+    try {
+      const res = await fetch('/api/scan/subscriptions', { credentials: 'include' });
+      if(!res.ok) return;
+      const data = await res.json();
+      aiSubs = data.subscriptions || [];
+      renderAiSubs();
+      refreshTotals();
+    } catch(e){ /* silent — dashboard still works without it */ }
+  }
+  loadPersistedScans();
+
+  const scanBtn = document.getElementById('scanBtn');
+  const scanStatus = document.getElementById('scanStatus');
+  const pasteToggle = document.getElementById('pasteToggle');
+  const pasteBox = document.getElementById('pasteBox');
+  const pasteScanBtn = document.getElementById('pasteScanBtn');
+
+  pasteToggle.addEventListener('click', () => {
+    pasteBox.style.display = pasteBox.style.display === 'none' ? 'flex' : 'none';
+  });
+
+  const scanPhrases = ['Connecting to inbox…', 'Reading receipts…', 'Extracting subscriptions…', 'Almost done…'];
+  let phraseTimer = null;
+  function startStatus(){
+    scanStatus.style.display = 'flex';
+    scanStatus.className = 'scan-status';
+    let i = 0;
+    scanStatus.innerHTML = `<span class="scan-dot"></span><span>${scanPhrases[0]}</span>`;
+    phraseTimer = setInterval(() => {
+      i = (i + 1) % scanPhrases.length;
+      scanStatus.innerHTML = `<span class="scan-dot"></span><span>${scanPhrases[i]}</span>`;
+    }, 900);
+  }
+  function endStatus(success, message){
+    clearInterval(phraseTimer);
+    scanStatus.className = 'scan-status ' + (success ? 'success' : 'error');
+    scanStatus.innerHTML = `<span>${success ? '✓' : '✕'} ${message}</span>`;
+    setTimeout(() => { scanStatus.style.display = 'none'; }, success ? 4000 : 6000);
+  }
+
+  async function runScan(url, body){
+    startStatus();
+    scanBtn.disabled = true;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body || {}),
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Scan failed.');
+
+      if(data.added === 0 && data.found === 0){
+        endStatus(true, 'No new subscriptions found — nothing looked recurring.');
+      } else if(data.added === 0 && data.found > 0){
+        endStatus(true, `Found ${data.found}, but you already track ${data.found === 1 ? 'it' : 'them'}.`);
+      } else {
+        endStatus(true, `Found ${data.added} new subscription${data.added === 1 ? '' : 's'}.`);
+        aiSubs = aiSubs.concat(data.subscriptions);
+        renderAiSubs();
+        refreshTotals();
+        const names = data.subscriptions.map(s => s.vendor).join(', ');
+        notify('Bleed found new subscriptions', `${data.added} new: ${names}`);
+      }
+    } catch(err){
+      endStatus(false, err.message);
+    } finally {
+      scanBtn.disabled = false;
+    }
+  }
+
+  scanBtn.addEventListener('click', () => runScan('/api/scan/demo'));
+  pasteScanBtn.addEventListener('click', () => {
+    const text = document.getElementById('pasteText').value;
+    if(!text.trim()) return;
+    runScan('/api/scan/text', { text });
+  });
+
+  // mini bar chart
+  const months = [
+    { label:'Feb', val:3200 }, { label:'Mar', val:3480 }, { label:'Apr', val:3610 },
+    { label:'May', val:3390 }, { label:'Jun', val:4120 }, { label:'Jul', val:totalMonthly() }
+  ];
+  const maxVal = Math.max(...months.map(m => m.val));
+  const barsWrap = document.getElementById('bars');
+  months.forEach((m, idx) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `<div class="bar" id="bar${idx}"></div><span>${m.label}</span>`;
+    barsWrap.appendChild(col);
+  });
+  setTimeout(() => {
+    months.forEach((m, idx) => {
+      document.getElementById('bar' + idx).style.height = ((m.val / maxVal) * 100) + '%';
+    });
+  }, 500);
+
+  // ---------- Generic modal helpers ----------
+  function openModal(overlay){ overlay.classList.add('open'); }
+  function closeModal(overlay){ overlay.classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(overlay); });
+  });
+
+  // ---------- Add Subscription modal ----------
+  const addSubOverlay = document.getElementById('addSubOverlay');
+  const addSubForm = document.getElementById('addSubForm');
+  const addSubMsg = document.getElementById('addSubMsg');
+  document.getElementById('addSubBtn').addEventListener('click', () => openModal(addSubOverlay));
+  document.getElementById('addSubClose').addEventListener('click', () => closeModal(addSubOverlay));
+
+  addSubForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('addSubSubmit');
+    const payload = {
+      vendor: document.getElementById('subVendor').value.trim(),
+      amount: document.getElementById('subAmount').value,
+      billingCycle: document.getElementById('subCycle').value,
+      nextRenewal: document.getElementById('subRenewal').value || null,
+    };
+    addSubMsg.className = 'modal-msg';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding…';
+
+    try {
+      const res = await fetch('/api/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Could not add subscription.');
+
+      aiSubs = aiSubs.concat(data.subscription);
+      renderAiSubs();
+      refreshTotals();
+      showToast('Subscription added', `${data.subscription.vendor} is now on your ledger.`);
+      addSubForm.reset();
+      closeModal(addSubOverlay);
+    } catch(err){
+      addSubMsg.className = 'modal-msg error';
+      addSubMsg.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add subscription';
+    }
+  });
+
+  // tilt on summary cards
+  if(window.matchMedia('(pointer:fine)').matches){
+    document.querySelectorAll('.summary-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(1000px) rotateX(${(-py*4).toFixed(2)}deg) rotateY(${(px*4).toFixed(2)}deg)`;
+      });
+      card.addEventListener('mouseleave', () => { card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)'; });
+    });
+  }
+</script>
+</body>
+</html>
